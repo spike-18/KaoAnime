@@ -63,9 +63,7 @@ def test_discriminator_loss_is_scalar():
 def test_lambda_cycle_scales_loss():
     """Increasing lambda_cycle must increase generator loss when cycle loss > 0."""
     t = _make_inputs(seed=42)
-    # Use identical rec and real so cycle loss isolates lambda effect cleanly,
-    # but keep idt different from real so identity loss is non-zero and stable.
-    # Actually we keep all tensors random — GAN term is fixed by disc outputs,
+    # All tensors are random — GAN term is fixed by disc outputs,
     # cycle and identity terms vary. We compare two lambdas with same data.
     loss_fn_low = CycleGANLoss(lambda_cycle=10.0, lambda_identity=5.0)
     loss_fn_high = CycleGANLoss(lambda_cycle=20.0, lambda_identity=5.0)
@@ -109,3 +107,46 @@ def test_perfect_cycle_gives_zero_cycle_loss():
     assert cycle_loss.item() == pytest.approx(0.0, abs=1e-6), (
         f"Expected zero cycle loss with identical tensors, got {cycle_loss.item()}"
     )
+
+
+def test_perfect_identity_gives_zero_identity_loss():
+    loss_fn = CycleGANLoss(lambda_cycle=0.0, lambda_identity=10.0)
+    real_a = torch.rand(1, 3, 8, 8)
+    real_b = torch.rand(1, 3, 8, 8)
+    disc = torch.rand(1, 1, 2, 2)
+    # When idt_a == real_a and idt_b == real_b, identity loss == 0
+    # Verify by comparing to lambda_identity=0 case (GAN loss is the same either way)
+    loss_with_idt = loss_fn.generator(
+        real_a,
+        real_b,
+        real_a,
+        real_b,
+        real_a,
+        real_b,
+        real_a.clone(),
+        real_b.clone(),
+        disc,
+        disc,
+    )
+    loss_fn_no_idt = CycleGANLoss(lambda_cycle=0.0, lambda_identity=0.0)
+    loss_no_idt = loss_fn_no_idt.generator(
+        real_a,
+        real_b,
+        real_a,
+        real_b,
+        real_a,
+        real_b,
+        real_a.clone(),
+        real_b.clone(),
+        disc,
+        disc,
+    )
+    assert loss_with_idt.item() == pytest.approx(loss_no_idt.item(), abs=1e-5)
+
+
+def test_discriminator_perfect_predictions_give_zero_loss():
+    loss_fn = CycleGANLoss()
+    ones = torch.ones(1, 1, 14, 14)
+    zeros = torch.zeros(1, 1, 14, 14)
+    loss = loss_fn.discriminator(ones, zeros, ones, zeros)
+    assert loss.item() == pytest.approx(0.0, abs=1e-6)

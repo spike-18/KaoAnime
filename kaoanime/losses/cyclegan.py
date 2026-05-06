@@ -43,8 +43,8 @@ class CycleGANLoss(nn.Module):
             fake_b: G_AB(real_a) — fake B images.
             rec_a: G_BA(fake_b) — reconstructed A images.
             rec_b: G_AB(fake_a) — reconstructed B images.
-            idt_a: G_BA(real_a) — identity mapping for A.
-            idt_b: G_AB(real_b) — identity mapping for B.
+            idt_a: G_BA(real_a) — should stay ≈ real_a (identity target is real_a).
+            idt_b: G_AB(real_b) — should stay ≈ real_b (identity target is real_b).
             disc_fake_a: Discriminator output for fake_a.
             disc_fake_b: Discriminator output for fake_b.
 
@@ -60,7 +60,7 @@ class CycleGANLoss(nn.Module):
         )
 
         loss_identity = self.lambda_identity * (
-            self.identity(idt_a, real_b) + self.identity(idt_b, real_a)
+            self.identity(idt_a, real_a) + self.identity(idt_b, real_b)
         )
 
         return loss_gan + loss_cycle + loss_identity
@@ -76,9 +76,13 @@ class CycleGANLoss(nn.Module):
 
         Args:
             disc_real_a: Discriminator output for real A images.
-            disc_fake_a: Discriminator output for fake A images.
+            disc_fake_a: Discriminator output for fake A images.  Must be detached
+                from the generator computation graph before being passed in, otherwise
+                the discriminator backward pass will leak gradients into the generators.
             disc_real_b: Discriminator output for real B images.
-            disc_fake_b: Discriminator output for fake B images.
+            disc_fake_b: Discriminator output for fake B images.  Must be detached
+                from the generator computation graph before being passed in, otherwise
+                the discriminator backward pass will leak gradients into the generators.
 
         Returns:
             Scalar tensor with the total discriminator loss.
