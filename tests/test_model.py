@@ -11,6 +11,7 @@ def test_dummy_generator_preserves_shape():
     assert gen(x).shape == x.shape
 
 
+@pytest.mark.filterwarnings("ignore::UserWarning")
 def test_kaoanime_model_training_step_returns_scalar():
     model = KaoAnimeModel(Config())
     batch = {"A": torch.randn(1, 3, 64, 64), "B": torch.randn(1, 3, 64, 64)}

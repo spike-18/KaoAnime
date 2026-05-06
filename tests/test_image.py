@@ -31,7 +31,7 @@ def test_save_image_white_tensor_produces_white_pixels(tmp_path):
     tensor = torch.ones(3, 16, 16)  # all 1.0 in [-1,1] = white
     save_image(tensor, out_path)
     img = Image.open(out_path).convert("RGB")
-    pixels = list(img.getdata())
+    pixels = list(img.get_flattened_data())
     assert all(v == 255 for px in pixels for v in px)
 
 
@@ -40,5 +40,5 @@ def test_save_image_black_tensor_produces_black_pixels(tmp_path):
     tensor = torch.full((3, 16, 16), -1.0)  # all -1.0 in [-1,1] = black
     save_image(tensor, out_path)
     img = Image.open(out_path).convert("RGB")
-    pixels = list(img.getdata())
+    pixels = list(img.get_flattened_data())
     assert all(v == 0 for px in pixels for v in px)

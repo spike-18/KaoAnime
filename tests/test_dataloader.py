@@ -4,7 +4,6 @@ from PIL import Image
 from torch.utils.data import DataLoader, TensorDataset
 from kaoanime.utils.dataloader import create_dataloader
 from kaoanime.utils.dataset import UnpairedImageDataset
-from kaoanime.utils.transforms import get_transforms
 
 
 def _make_images(directory: Path, count: int) -> None:
@@ -25,7 +24,7 @@ def test_create_dataloader_respects_batch_size(tmp_path):
     _make_images(tmp_path / "A", 4)
     _make_images(tmp_path / "B", 4)
     ds = UnpairedImageDataset(
-        tmp_path / "A", tmp_path / "B", get_transforms("test", 64)
+        tmp_path / "A", tmp_path / "B", image_size=64, train=False
     )
     dl = create_dataloader(
         ds, batch_size=2, shuffle=False, num_workers=0, pin_memory=False
@@ -40,7 +39,7 @@ def test_create_dataloader_drop_last(tmp_path):
     _make_images(tmp_path / "A", 3)
     _make_images(tmp_path / "B", 3)
     ds = UnpairedImageDataset(
-        tmp_path / "A", tmp_path / "B", get_transforms("test", 64)
+        tmp_path / "A", tmp_path / "B", image_size=64, train=False
     )
     dl = create_dataloader(
         ds, batch_size=2, shuffle=False, num_workers=0, pin_memory=False
