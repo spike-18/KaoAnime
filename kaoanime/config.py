@@ -32,10 +32,17 @@ class EvalConfig:
 
 
 @dataclass
+class ModelConfig:
+    num_filters: int = 64
+    num_down: int = 7
+
+
+@dataclass
 class Config:
     data: DataConfig = field(default_factory=DataConfig)
     train: TrainConfig = field(default_factory=TrainConfig)
     eval: EvalConfig = field(default_factory=EvalConfig)
+    model: ModelConfig = field(default_factory=ModelConfig)
 
 
 def register_configs() -> None:

@@ -1,20 +1,14 @@
-# tests/test_model.py
 import pytest
 import torch
+
 from kaoanime.config import Config
-from kaoanime.model import DummyGenerator, KaoAnimeModel
-
-
-def test_dummy_generator_preserves_shape():
-    gen = DummyGenerator()
-    x = torch.randn(1, 3, 64, 64)
-    assert gen(x).shape == x.shape
+from kaoanime.model import KaoAnimeModel
 
 
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_kaoanime_model_training_step_returns_scalar():
     model = KaoAnimeModel(Config())
-    batch = {"A": torch.randn(1, 3, 64, 64), "B": torch.randn(1, 3, 64, 64)}
+    batch = {"A": torch.randn(1, 3, 128, 128), "B": torch.randn(1, 3, 128, 128)}
     loss = model.training_step(batch, 0)
     assert loss.ndim == 0
 
@@ -27,3 +21,5 @@ def test_config_defaults():
     assert cfg.data.batch_size == 1
     assert cfg.data.image_size == 128
     assert cfg.eval.output_dir == "outputs/eval"
+    assert cfg.model.num_filters == 64
+    assert cfg.model.num_down == 7

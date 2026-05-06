@@ -1,21 +1,11 @@
-# kaoanime/model.py
 from __future__ import annotations
 
 import lightning as pl
 import torch
-import torch.nn as nn
 from omegaconf import OmegaConf
 
 from kaoanime.config import Config
-
-
-class DummyGenerator(nn.Module):
-    def __init__(self) -> None:
-        super().__init__()
-        self.net = nn.Identity()
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.net(x)
+from kaoanime.models import UNetGenerator
 
 
 class KaoAnimeModel(pl.LightningModule):
@@ -29,7 +19,10 @@ class KaoAnimeModel(pl.LightningModule):
             }
         )
         self.cfg = cfg
-        self.generator = DummyGenerator()
+        self.generator = UNetGenerator(
+            num_filters=cfg.model.num_filters,
+            num_down=cfg.model.num_down,
+        )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.generator(x)
