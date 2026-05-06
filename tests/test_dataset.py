@@ -50,3 +50,16 @@ def test_accepts_string_paths(tmp_path):
         str(tmp_path / "A"), str(tmp_path / "B"), get_transforms("test", 64)
     )
     assert len(ds) == 2
+
+
+def test_a_wraps_around_when_b_is_larger(tmp_path):
+    _make_images(tmp_path / "A", 3)
+    _make_images(tmp_path / "B", 5)
+    ds = UnpairedImageDataset(
+        tmp_path / "A", tmp_path / "B", get_transforms("test", 64)
+    )
+    assert len(ds) == 5
+    # index 4: A[4 % 3 = 1], B[4] — both must be valid
+    item = ds[4]
+    assert item["A"].shape == (3, 64, 64)
+    assert item["B"].shape == (3, 64, 64)
