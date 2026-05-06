@@ -39,3 +39,18 @@ def test_patch_discriminator_batch() -> None:
     x = torch.randn(2, 3, 128, 128)
     out = model(x)
     assert out.shape == (2, 1, 14, 14)
+
+
+def test_resnet_generator_custom_filters() -> None:
+    model = ResNetGenerator(num_filters=128)
+    x = torch.randn(1, 3, 128, 128)
+    out = model(x)
+    assert out.shape == (1, 3, 128, 128)
+
+
+def test_patch_discriminator_output_dtype() -> None:
+    model = PatchDiscriminator()
+    x = torch.randn(1, 3, 128, 128)
+    out = model(x)
+    assert out.dtype == torch.float32
+    assert not torch.all(out == 0)

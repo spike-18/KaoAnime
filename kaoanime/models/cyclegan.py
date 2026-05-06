@@ -30,45 +30,59 @@ class ResNetGenerator(nn.Module):
         num_residual_blocks: int = 9,
     ) -> None:
         super().__init__()
+        # Build encoder channel sequence so the decoder can mirror it exactly.
+        enc_channels = [num_filters]
+        nf = num_filters
+        for _ in range(2):
+            nf = min(nf * 2, 256)
+            enc_channels.append(nf)
+        # enc_channels: [num_filters, stage1_out, stage2_out]
+
         layers: list[nn.Module] = [
             nn.ReflectionPad2d(3),
-            nn.Conv2d(in_channels, num_filters, kernel_size=7, bias=False),
-            nn.InstanceNorm2d(num_filters),
+            nn.Conv2d(in_channels, enc_channels[0], kernel_size=7, bias=False),
+            nn.InstanceNorm2d(enc_channels[0]),
             nn.ReLU(inplace=True),
         ]
 
         # Downsample ×2
-        nf = num_filters
-        for _ in range(2):
-            nf_next = min(nf * 2, 256)
+        for i in range(2):
             layers += [
-                nn.Conv2d(nf, nf_next, kernel_size=3, stride=2, padding=1, bias=False),
-                nn.InstanceNorm2d(nf_next),
+                nn.Conv2d(
+                    enc_channels[i],
+                    enc_channels[i + 1],
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                ),
+                nn.InstanceNorm2d(enc_channels[i + 1]),
                 nn.ReLU(inplace=True),
             ]
-            nf = nf_next
+
+        nf = enc_channels[-1]
 
         # Residual blocks
         for _ in range(num_residual_blocks):
             layers.append(_ResBlock(nf))
 
-        # Upsample ×2
-        for _ in range(2):
-            nf_prev = nf // 2
+        # Upsample ×2 — mirror encoder channel sequence in reverse
+        for i in range(2, 0, -1):
             layers += [
                 nn.ConvTranspose2d(
-                    nf,
-                    nf_prev,
+                    enc_channels[i],
+                    enc_channels[i - 1],
                     kernel_size=3,
                     stride=2,
                     padding=1,
                     output_padding=1,
                     bias=False,
                 ),
-                nn.InstanceNorm2d(nf_prev),
+                nn.InstanceNorm2d(enc_channels[i - 1]),
                 nn.ReLU(inplace=True),
             ]
-            nf = nf_prev
+
+        nf = enc_channels[0]
 
         # Output
         layers += [
