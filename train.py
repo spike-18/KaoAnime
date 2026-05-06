@@ -14,6 +14,7 @@ def main(cfg: Config) -> None:
     dataset = UnpairedImageDataset(
         cfg.data.root_a, cfg.data.root_b, cfg.data.image_size
     )
+
     train_dl = create_dataloader(
         dataset,
         batch_size=cfg.data.batch_size,
@@ -21,7 +22,9 @@ def main(cfg: Config) -> None:
         num_workers=cfg.data.num_workers,
         pin_memory=cfg.data.pin_memory,
     )
+
     model = KaoAnimeModel(cfg)
+
     trainer = pl.Trainer(
         max_epochs=cfg.train.max_epochs,
         precision=cfg.train.precision,
