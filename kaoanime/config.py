@@ -21,6 +21,7 @@ class DataConfig:
 class TrainConfig:
     max_epochs: int = 200
     lr: float = 2e-4
+    beta1: float = 0.5
     precision: str = "16-mixed"
     log_every_n_steps: int = 10
 
@@ -34,7 +35,9 @@ class EvalConfig:
 @dataclass
 class ModelConfig:
     num_filters: int = 64
-    num_down: int = 7
+    num_residual_blocks: int = 9
+    lambda_cycle: float = 10.0
+    lambda_identity: float = 5.0
 
 
 @dataclass
