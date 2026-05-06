@@ -2,15 +2,14 @@
 from dataclasses import dataclass, field
 
 from hydra.core.config_store import ConfigStore
-from omegaconf import MISSING
 
 
 @dataclass
 class DataConfig:
-    root_a: str = MISSING
-    root_b: str = MISSING
-    test_a: str = MISSING
-    test_b: str = MISSING
+    root_a: str = "data/selfie2anime/trainA"
+    root_b: str = "data/selfie2anime/trainB"
+    test_a: str = "data/selfie2anime/testA"
+    test_b: str = "data/selfie2anime/testB"
     batch_size: int = 1
     image_size: int = 128
     num_workers: int = 4
@@ -24,6 +23,8 @@ class TrainConfig:
     beta1: float = 0.5
     precision: str = "16-mixed"
     log_every_n_steps: int = 10
+    mlflow_tracking_uri: str = "http://localhost:5000"
+    log_image_every_n_epochs: int = 10
 
 
 @dataclass

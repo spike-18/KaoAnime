@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import numpy as np
 import lightning as pl
 import torch
+from lightning.pytorch.loggers import MLFlowLogger
 from omegaconf import OmegaConf
 
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
 from kaoanime.models import PatchDiscriminator, ResNetGenerator
+
+
+def _tensor_to_image(t: torch.Tensor) -> np.ndarray:
+    """Convert a (3, H, W) tensor in [-1, 1] to a (H, W, 3) uint8 array."""
+    img = t.float().clamp(-1.0, 1.0).add(1.0).div(2.0)
+    return (img.permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8)
 
 
 class KaoAnimeModel(pl.LightningModule):
@@ -41,6 +49,8 @@ class KaoAnimeModel(pl.LightningModule):
         return self.g_ab(x)
 
     def training_step(self, batch: dict, batch_idx: int) -> None:
+        if batch_idx == 0 and not hasattr(self, "_log_batch"):
+            self._log_batch = {k: v[:1].detach().cpu() for k, v in batch.items()}
         real_a, real_b = batch["A"], batch["B"]
         opt_g, opt_d = self.optimizers()
 
@@ -94,6 +104,26 @@ class KaoAnimeModel(pl.LightningModule):
             {"train/loss_g": loss_g, "train/loss_d": loss_d},
             on_step=True,
             on_epoch=True,
+        )
+
+    def on_train_epoch_end(self) -> None:
+        if not isinstance(self.logger, MLFlowLogger):
+            return
+        if (self.current_epoch + 1) % self.cfg.train.log_image_every_n_epochs != 0:
+            return
+        if not hasattr(self, "_log_batch"):
+            return
+        with torch.no_grad():
+            real_a = self._log_batch["A"].to(self.device)
+            fake_b = self.g_ab(real_a)
+        epoch = self.current_epoch + 1
+        run_id = self.logger.run_id
+        if epoch == self.cfg.train.log_image_every_n_epochs:
+            self.logger.experiment.log_image(
+                run_id, _tensor_to_image(real_a[0]), "images/input.png"
+            )
+        self.logger.experiment.log_image(
+            run_id, _tensor_to_image(fake_b[0]), f"images/{epoch:04d}_output.png"
         )
 
     def test_step(self, batch: dict, batch_idx: int) -> None:

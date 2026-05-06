@@ -1,11 +1,14 @@
 # train.py
 import hydra
 import lightning as pl
+import torch
+from lightning.pytorch.loggers import MLFlowLogger
 
 from kaoanime.config import Config, register_configs
 from kaoanime.model import KaoAnimeModel
 from kaoanime.utils import UnpairedImageDataset, create_dataloader
 
+torch.set_float32_matmul_precision("medium")
 register_configs()
 
 
@@ -25,10 +28,16 @@ def main(cfg: Config) -> None:
 
     model = KaoAnimeModel(cfg)
 
+    logger = MLFlowLogger(
+        experiment_name="kaoanime",
+        tracking_uri=cfg.train.mlflow_tracking_uri,
+    )
+
     trainer = pl.Trainer(
         max_epochs=cfg.train.max_epochs,
         precision=cfg.train.precision,
         log_every_n_steps=cfg.train.log_every_n_steps,
+        logger=logger,
     )
     trainer.fit(model, train_dl)
 

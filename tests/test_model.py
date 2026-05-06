@@ -15,17 +15,21 @@ def test_model_forward_pass():
     assert out.shape == (1, 3, 128, 128)
 
 
+class _PairedDataset(torch.utils.data.Dataset):
+    def __len__(self) -> int:
+        return 2
+
+    def __getitem__(self, idx: int) -> dict:
+        return {"A": torch.randn(3, 128, 128), "B": torch.randn(3, 128, 128)}
+
+
 def _make_fake_loader() -> DataLoader:
-    """Single-batch dataloader that yields {A, B} dicts."""
-
-    class PairedDataset(torch.utils.data.Dataset):
-        def __len__(self) -> int:
-            return 2
-
-        def __getitem__(self, idx: int) -> dict:
-            return {"A": torch.randn(3, 128, 128), "B": torch.randn(3, 128, 128)}
-
-    return DataLoader(PairedDataset(), batch_size=2)
+    return DataLoader(
+        _PairedDataset(),
+        batch_size=2,
+        num_workers=2,
+        multiprocessing_context="forkserver",
+    )
 
 
 def test_model_training_step_runs():
@@ -33,7 +37,7 @@ def test_model_training_step_runs():
     model = KaoAnimeModel(Config())
     trainer = Trainer(
         max_epochs=1,
-        accelerator="cpu",
+        accelerator="auto",
         logger=False,
         enable_checkpointing=False,
         enable_progress_bar=False,
