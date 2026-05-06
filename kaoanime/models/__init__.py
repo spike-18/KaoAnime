@@ -1,3 +1,3 @@
-from .unet import UNetGenerator
+from .cyclegan import PatchDiscriminator, ResNetGenerator
 
-__all__ = ["UNetGenerator"]
+__all__ = ["PatchDiscriminator", "ResNetGenerator"]
