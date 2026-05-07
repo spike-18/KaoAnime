@@ -18,12 +18,12 @@ class DataConfig:
 
 @dataclass
 class TrainConfig:
-    max_epochs: int = 200
+    max_epochs: int = 500
     lr: float = 2e-4
     beta1: float = 0.5
     precision: str = "16-mixed"
     log_every_n_steps: int = 10
-    mlflow_tracking_uri: str = "http://localhost:5000"
+    mlflow_tracking_uri: str = "http://10.0.111.233:9999"
     log_image_every_n_epochs: int = 10
 
 

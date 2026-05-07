@@ -34,6 +34,8 @@ def main(cfg: Config) -> None:
     )
 
     trainer = pl.Trainer(
+        devices=1,
+        accelerator="auto",
         max_epochs=cfg.train.max_epochs,
         precision=cfg.train.precision,
         log_every_n_steps=cfg.train.log_every_n_steps,
