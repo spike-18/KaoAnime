@@ -10,6 +10,8 @@ class DataConfig:
     root_b: str = "data/selfie2anime/trainB"
     test_a: str = "data/selfie2anime/testA"
     test_b: str = "data/selfie2anime/testB"
+    extra_roots_a: list[str] = field(default_factory=list)
+    extra_roots_b: list[str] = field(default_factory=list)
     batch_size: int = 1
     image_size: int = 128
     num_workers: int = 4
@@ -35,8 +37,8 @@ class EvalConfig:
 
 @dataclass
 class ModelConfig:
-    num_filters: int = 64
-    num_residual_blocks: int = 9
+    num_filters: int = 128
+    num_residual_blocks: int = 18
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
 

@@ -59,8 +59,8 @@ class KaoAnimeModel(pl.LightningModule):
         fake_a = self.g_ba(real_b)  # B → A
         rec_a = self.g_ba(fake_b)  # A → B → A
         rec_b = self.g_ab(fake_a)  # B → A → B
-        idt_a = self.g_ba(real_a)  # G_BA on A domain (identity)
-        idt_b = self.g_ab(real_b)  # G_AB on B domain (identity)
+        idt_b = self.g_ab(real_b)  # G_AB(real_b) should ≈ real_b
+        idt_a = self.g_ba(real_a)  # G_BA(real_a) should ≈ real_a
 
         # --- Generator update ---
         self.toggle_optimizer(opt_g)
@@ -73,10 +73,10 @@ class KaoAnimeModel(pl.LightningModule):
             fake_b,
             rec_a,
             rec_b,
-            idt_a,
-            idt_b,
             disc_fake_a,
             disc_fake_b,
+            idt_a,
+            idt_b,
         )
         opt_g.zero_grad()
         self.manual_backward(loss_g)

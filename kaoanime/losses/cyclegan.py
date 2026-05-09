@@ -17,7 +17,7 @@ class CycleGANLoss(nn.Module):
         super().__init__()
         self.lambda_cycle = lambda_cycle
         self.lambda_identity = lambda_identity
-        self.gan = nn.MSELoss()
+        self.gan = nn.BCEWithLogitsLoss()
         self.cycle = nn.L1Loss()
         self.identity = nn.L1Loss()
 
@@ -29,10 +29,10 @@ class CycleGANLoss(nn.Module):
         fake_b: Tensor,
         rec_a: Tensor,
         rec_b: Tensor,
-        idt_a: Tensor,
-        idt_b: Tensor,
         disc_fake_a: Tensor,
         disc_fake_b: Tensor,
+        idt_a: Tensor,
+        idt_b: Tensor,
     ) -> Tensor:
         """Compute combined generator loss.
 
@@ -43,17 +43,15 @@ class CycleGANLoss(nn.Module):
             fake_b: G_AB(real_a) — fake B images.
             rec_a: G_BA(fake_b) — reconstructed A images.
             rec_b: G_AB(fake_a) — reconstructed B images.
-            idt_a: G_BA(real_a) — should stay ≈ real_a (identity target is real_a).
-            idt_b: G_AB(real_b) — should stay ≈ real_b (identity target is real_b).
             disc_fake_a: Discriminator output for fake_a.
             disc_fake_b: Discriminator output for fake_b.
+            idt_a: G_BA(real_a) — identity-mapped A images.
+            idt_b: G_AB(real_b) — identity-mapped B images.
 
         Returns:
             Scalar tensor with the total generator loss.
         """
-        loss_gan = self.gan(disc_fake_a, torch.ones_like(disc_fake_a)) + self.gan(
-            disc_fake_b, torch.ones_like(disc_fake_b)
-        )
+        loss_gan = self.gan(disc_fake_a, torch.ones_like(disc_fake_a)) + self.gan(disc_fake_b, torch.ones_like(disc_fake_b))
 
         loss_cycle = self.lambda_cycle * (
             self.cycle(rec_a, real_a) + self.cycle(rec_b, real_b)
@@ -87,6 +85,7 @@ class CycleGANLoss(nn.Module):
         Returns:
             Scalar tensor with the total discriminator loss.
         """
+
         loss_d_a = 0.5 * (
             self.gan(disc_real_a, torch.ones_like(disc_real_a))
             + self.gan(disc_fake_a, torch.zeros_like(disc_fake_a))

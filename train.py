@@ -15,7 +15,11 @@ register_configs()
 @hydra.main(version_base=None, config_path=None, config_name="config")
 def main(cfg: Config) -> None:
     dataset = UnpairedImageDataset(
-        cfg.data.root_a, cfg.data.root_b, cfg.data.image_size
+        cfg.data.root_a,
+        cfg.data.root_b,
+        cfg.data.image_size,
+        extra_roots_a=list(cfg.data.extra_roots_a),
+        extra_roots_b=list(cfg.data.extra_roots_b),
     )
 
     train_dl = create_dataloader(
