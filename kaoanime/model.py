@@ -129,6 +129,17 @@ class KaoAnimeModel(pl.LightningModule):
     def test_step(self, batch: dict, batch_idx: int) -> None:
         _ = self.g_ab(batch["A"])
 
+    def on_train_epoch_end(self) -> None:
+        self._sch_g.step()
+        self._sch_d.step()
+
+    def _lr_lambda(self, epoch: int) -> float:
+        decay_start = self.cfg.train.lr_decay_start_epoch
+        max_epochs = self.cfg.train.max_epochs
+        if epoch < decay_start or max_epochs <= decay_start:
+            return 1.0
+        return max(0.0, 1.0 - (epoch - decay_start) / (max_epochs - decay_start))
+
     def configure_optimizers(self):
         lr = self.cfg.train.lr
         betas = (self.cfg.train.beta1, 0.999)
@@ -142,4 +153,6 @@ class KaoAnimeModel(pl.LightningModule):
             lr=lr,
             betas=betas,
         )
+        self._sch_g = torch.optim.lr_scheduler.LambdaLR(opt_g, self._lr_lambda)
+        self._sch_d = torch.optim.lr_scheduler.LambdaLR(opt_d, self._lr_lambda)
         return [opt_g, opt_d]
