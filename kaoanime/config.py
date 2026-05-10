@@ -12,7 +12,7 @@ class DataConfig:
     test_b: str = "data/selfie2anime/testB"
     extra_roots_a: list[str] = field(default_factory=lambda: ["data/flickrfaceshq/resized"])
     extra_roots_b: list[str] = field(default_factory=lambda: ["data/animefacedataset/images"])
-    batch_size: int = 1
+    batch_size: int = 16
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True

@@ -46,8 +46,9 @@ class KaoAnimeModel(pl.LightningModule):
             lambda_identity=cfg.model.lambda_identity,
         )
         self._train_step = 0
-        self.pool_a = ImagePool(50)
-        self.pool_b = ImagePool(50)
+        pool_size = max(50, cfg.data.batch_size * 8)
+        self.pool_a = ImagePool(pool_size)
+        self.pool_b = ImagePool(pool_size)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.g_ab(x)
