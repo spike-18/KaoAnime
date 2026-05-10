@@ -39,7 +39,7 @@ class EvalConfig:
 @dataclass
 class ModelConfig:
     num_filters: int = 128
-    num_residual_blocks: int = 18
+    num_residual_blocks: int = 9
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
 
