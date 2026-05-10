@@ -109,19 +109,15 @@ class PatchDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             # Layer 1
             nn.utils.spectral_norm(nn.Conv2d(nf, nf * 2, kernel_size=4, stride=2, padding=1, bias=False)),
-            nn.InstanceNorm2d(nf * 2),
             nn.LeakyReLU(0.2, inplace=True),
             # Layer 2
             nn.utils.spectral_norm(nn.Conv2d(nf * 2, nf * 4, kernel_size=4, stride=2, padding=1, bias=False)),
-            nn.InstanceNorm2d(nf * 4),
             nn.LeakyReLU(0.2, inplace=True),
             # Layer 3 — stride 1
             nn.utils.spectral_norm(nn.Conv2d(nf * 4, nf * 8, kernel_size=4, stride=1, padding=1, bias=False)),
-            nn.InstanceNorm2d(nf * 8),
             nn.LeakyReLU(0.2, inplace=True),
             # Layer 4 — extra stride-1 conv
             nn.utils.spectral_norm(nn.Conv2d(nf * 8, nf * 8, kernel_size=4, stride=1, padding=1, bias=False)),
-            nn.InstanceNorm2d(nf * 8),
             nn.LeakyReLU(0.2, inplace=True),
             # Output — stride 1
             nn.utils.spectral_norm(nn.Conv2d(nf * 8, 1, kernel_size=4, stride=1, padding=1)),
