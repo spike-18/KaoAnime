@@ -9,6 +9,7 @@ from omegaconf import OmegaConf
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
 from kaoanime.models import PatchDiscriminator, ResNetGenerator
+from kaoanime.utils import ImagePool
 
 
 def _tensor_to_image(t: torch.Tensor) -> np.ndarray:
@@ -44,6 +45,9 @@ class KaoAnimeModel(pl.LightningModule):
             lambda_cycle=cfg.model.lambda_cycle,
             lambda_identity=cfg.model.lambda_identity,
         )
+        self._train_step = 0
+        self.pool_a = ImagePool(50)
+        self.pool_b = ImagePool(50)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.g_ab(x)
@@ -86,9 +90,9 @@ class KaoAnimeModel(pl.LightningModule):
         # --- Discriminator update ---
         self.toggle_optimizer(opt_d)
         disc_real_a = self.d_a(real_a)
-        disc_fake_a_det = self.d_a(fake_a.detach())
+        disc_fake_a_det = self.d_a(self.pool_a.query(fake_a))
         disc_real_b = self.d_b(real_b)
-        disc_fake_b_det = self.d_b(fake_b.detach())
+        disc_fake_b_det = self.d_b(self.pool_b.query(fake_b))
         loss_d = self.criterion.discriminator(
             disc_real_a,
             disc_fake_a_det,
@@ -106,25 +110,21 @@ class KaoAnimeModel(pl.LightningModule):
             on_epoch=True,
         )
 
-    def on_train_epoch_end(self) -> None:
-        if not isinstance(self.logger, MLFlowLogger):
-            return
-        if (self.current_epoch + 1) % self.cfg.train.log_image_every_n_epochs != 0:
-            return
-        if not hasattr(self, "_log_batch"):
-            return
-        with torch.no_grad():
-            real_a = self._log_batch["A"].to(self.device)
-            fake_b = self.g_ab(real_a)
-        epoch = self.current_epoch + 1
-        run_id = self.logger.run_id
-        if epoch == self.cfg.train.log_image_every_n_epochs:
+        self._train_step += 1
+        n = self.cfg.train.log_image_every_n_steps
+        if isinstance(self.logger, MLFlowLogger) and hasattr(self, "_log_batch") and self._train_step % n == 0:
+            with torch.no_grad():
+                real_a = self._log_batch["A"].to(self.device)
+                fake_b = self.g_ab(real_a)
+            run_id = self.logger.run_id
+            if self._train_step == n:
+                self.logger.experiment.log_image(
+                    run_id, _tensor_to_image(real_a[0]), "images/input.png"
+                )
             self.logger.experiment.log_image(
-                run_id, _tensor_to_image(real_a[0]), "images/input.png"
+                run_id, _tensor_to_image(fake_b[0]), f"images/{self._train_step:06d}_output.png"
             )
-        self.logger.experiment.log_image(
-            run_id, _tensor_to_image(fake_b[0]), f"images/{epoch:04d}_output.png"
-        )
+
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         _ = self.g_ab(batch["A"])
