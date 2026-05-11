@@ -61,3 +61,13 @@ def test_infer_output_filenames_match_input(tmp_path):
 
     assert (out_dir / "face_001.png").exists()
     assert (out_dir / "face_002.png").exists()
+
+
+def test_infer_invalid_direction_raises(tmp_path):
+    src = tmp_path / "input.jpg"
+    Image.new("RGB", (128, 128)).save(src)
+    out_dir = tmp_path / "out"
+
+    import pytest
+    with pytest.raises(ValueError, match="direction must be"):
+        run_inference(_cpu_model(), src, out_dir, image_size=128, direction="A2B", device="cpu")
