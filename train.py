@@ -2,6 +2,7 @@
 import hydra
 import lightning as pl
 import torch
+from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 
 from kaoanime.config import Config, register_configs
@@ -37,6 +38,8 @@ def main(cfg: Config) -> None:
         tracking_uri=cfg.train.mlflow_tracking_uri,
     )
 
+    ckpt_callback = ModelCheckpoint(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)
+
     trainer = pl.Trainer(
         devices=1,
         accelerator="auto",
@@ -44,8 +47,12 @@ def main(cfg: Config) -> None:
         precision=cfg.train.precision,
         log_every_n_steps=cfg.train.log_every_n_steps,
         logger=logger,
+        callbacks=[ckpt_callback],
     )
     trainer.fit(model, train_dl)
+
+    if ckpt_callback.last_model_path:
+        logger.experiment.log_artifact(logger.run_id, ckpt_callback.last_model_path)
 
 
 if __name__ == "__main__":

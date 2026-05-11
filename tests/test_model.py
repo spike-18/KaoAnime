@@ -1,6 +1,7 @@
 import pytest
 import torch
 from lightning import Trainer
+from lightning.pytorch.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 
 from kaoanime.config import Config
@@ -58,3 +59,24 @@ def test_config_defaults():
     assert cfg.model.num_residual_blocks == 9
     assert cfg.model.lambda_cycle == pytest.approx(10.0)
     assert cfg.model.lambda_identity == pytest.approx(5.0)
+
+
+def test_last_checkpoint_is_saved(tmp_path):
+    ckpt_cb = ModelCheckpoint(
+        dirpath=tmp_path,
+        filename="last",
+        save_last=False,
+        save_top_k=1,
+        monitor=None,
+    )
+    trainer = Trainer(
+        max_epochs=1,
+        accelerator="cpu",
+        logger=False,
+        callbacks=[ckpt_cb],
+        enable_progress_bar=False,
+    )
+    model = KaoAnimeModel(Config())
+    trainer.fit(model, train_dataloaders=_make_fake_loader())
+    saved = list(tmp_path.glob("*.ckpt"))
+    assert len(saved) == 1, f"Expected 1 checkpoint, found: {saved}"
