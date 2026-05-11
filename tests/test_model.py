@@ -64,10 +64,8 @@ def test_config_defaults():
 def test_last_checkpoint_is_saved(tmp_path):
     ckpt_cb = ModelCheckpoint(
         dirpath=tmp_path,
-        filename="last",
-        save_last=False,
-        save_top_k=1,
-        monitor=None,
+        save_last=True,
+        save_top_k=0,
     )
     trainer = Trainer(
         max_epochs=1,
@@ -80,3 +78,4 @@ def test_last_checkpoint_is_saved(tmp_path):
     trainer.fit(model, train_dataloaders=_make_fake_loader())
     saved = list(tmp_path.glob("*.ckpt"))
     assert len(saved) == 1, f"Expected 1 checkpoint, found: {saved}"
+    assert saved[0].name == "last.ckpt"
