@@ -6,6 +6,8 @@ import torch
 from lightning.pytorch.loggers import MLFlowLogger
 from omegaconf import OmegaConf
 
+from torchmetrics.image.fid import FrechetInceptionDistance
+
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
 from kaoanime.models import PatchDiscriminator, ResNetGenerator
@@ -49,6 +51,8 @@ class KaoAnimeModel(pl.LightningModule):
         pool_size = max(50, cfg.data.batch_size * 8)
         self.pool_a = ImagePool(pool_size)
         self.pool_b = ImagePool(pool_size)
+        self.fid = FrechetInceptionDistance(feature=2048, normalize=True)
+        self._fid_images_seen = 0
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.g_ab(x)
@@ -111,6 +115,18 @@ class KaoAnimeModel(pl.LightningModule):
             on_epoch=True,
         )
 
+        # --- FID accumulation (reuses fake_b from forward pass) ---
+        n_fid = self.cfg.train.fid_every_n_epochs
+        fid_limit = self.cfg.train.fid_num_images
+        if n_fid > 0 and (self.current_epoch + 1) % n_fid == 0 and self._fid_images_seen < fid_limit:
+            take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
+            with torch.no_grad():
+                real_f = real_a[:take].float().add(1).div(2).clamp(0, 1)
+                fake_f = fake_b[:take].detach().float().add(1).div(2).clamp(0, 1)
+            self.fid.update(real_f, real=True)
+            self.fid.update(fake_f, real=False)
+            self._fid_images_seen += take
+
         self._train_step += 1
         n = self.cfg.train.log_image_every_n_steps
         if isinstance(self.logger, MLFlowLogger) and hasattr(self, "_log_batch") and self._train_step % n == 0:
@@ -133,6 +149,16 @@ class KaoAnimeModel(pl.LightningModule):
     def on_train_epoch_end(self) -> None:
         self._sch_g.step()
         self._sch_d.step()
+
+        n_fid = self.cfg.train.fid_every_n_epochs
+        if n_fid > 0 and (self.current_epoch + 1) % n_fid == 0 and self._fid_images_seen > 0:
+            score = self.fid.compute()
+            if isinstance(self.logger, MLFlowLogger):
+                self.logger.experiment.log_metric(
+                    self.logger.run_id, "val/fid", score.item(), step=self.current_epoch + 1
+                )
+            self.fid.reset()
+            self._fid_images_seen = 0
 
     def _lr_lambda(self, epoch: int) -> float:
         decay_start = self.cfg.train.lr_decay_start_epoch
