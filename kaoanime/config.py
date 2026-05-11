@@ -28,7 +28,7 @@ class TrainConfig:
     log_every_n_steps: int = 10
     mlflow_tracking_uri: str = "http://10.0.111.233:9999"
     log_image_every_n_steps: int = 150
-    fid_every_n_epochs: int = 5
+    fid_every_n_epochs: int = 1
     fid_num_images: int = 2048
 
 
@@ -36,6 +36,8 @@ class TrainConfig:
 class EvalConfig:
     checkpoint: str = ""
     output_dir: str = "outputs/eval"
+    input: str = ""
+    direction: str = "a2b"
 
 
 @dataclass
