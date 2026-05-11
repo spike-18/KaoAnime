@@ -35,12 +35,17 @@ def run_inference(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     transform = get_transforms("test", image_size=image_size)
+    if direction not in {"a2b", "b2a"}:
+        raise ValueError(f"direction must be 'a2b' or 'b2a', got {direction!r}")
     generator = model.g_ab if direction == "a2b" else model.g_ba
 
     if input_path.is_file():
         paths = [input_path]
     else:
         paths = sorted(p for p in input_path.iterdir() if p.suffix.lower() in _IMAGE_EXTS)
+
+    if not paths:
+        raise FileNotFoundError(f"No images found in {input_path!r} (supported: {_IMAGE_EXTS})")
 
     written: list[Path] = []
     with torch.no_grad():
