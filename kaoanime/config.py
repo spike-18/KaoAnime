@@ -12,7 +12,7 @@ class DataConfig:
     test_b: str = "data/selfie2anime/testB"
     extra_roots_a: list[str] = field(default_factory=lambda: ["data/flickrfaceshq/resized"])
     extra_roots_b: list[str] = field(default_factory=lambda: ["data/animefacedataset/images"])
-    batch_size: int = 1
+    batch_size: int = 4
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True
@@ -20,9 +20,9 @@ class DataConfig:
 
 @dataclass
 class TrainConfig:
-    max_epochs: int = 20
+    max_epochs: int = 50
     lr: float = 2e-4
-    lr_decay_start_epoch: int = 10
+    lr_decay_start_epoch: int = 30
     beta1: float = 0.5
     precision: str = "16-mixed"
     log_every_n_steps: int = 20
@@ -44,8 +44,10 @@ class EvalConfig:
 class ModelConfig:
     num_filters: int = 128
     num_residual_blocks: int = 9
+    generator: str = "resnet"       # "resnet" or "unet"
+    discriminator: str = "patch"    # "patch" or "resnet"
     lambda_cycle: float = 10.0
-    lambda_identity: float = 5.0
+    lambda_identity: float = 0.5
 
 
 @dataclass

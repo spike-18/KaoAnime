@@ -10,8 +10,23 @@ from torchmetrics.image.fid import FrechetInceptionDistance
 
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
-from kaoanime.models import PatchDiscriminator, ResNetGenerator
+from kaoanime.models import PatchDiscriminator, ResNetDiscriminator, ResNetGenerator, UNetGenerator
 from kaoanime.utils import ImagePool
+
+
+def _make_generator(cfg: Config) -> torch.nn.Module:
+    if cfg.model.generator == "unet":
+        return UNetGenerator(num_filters=cfg.model.num_filters)
+    return ResNetGenerator(
+        num_filters=cfg.model.num_filters,
+        num_residual_blocks=cfg.model.num_residual_blocks,
+    )
+
+
+def _make_discriminator(cfg: Config) -> torch.nn.Module:
+    if cfg.model.discriminator == "resnet":
+        return ResNetDiscriminator(num_filters=cfg.model.num_filters)
+    return PatchDiscriminator(num_filters=cfg.model.num_filters)
 
 
 def _tensor_to_image(t: torch.Tensor) -> np.ndarray:
@@ -33,16 +48,10 @@ class KaoAnimeModel(pl.LightningModule):
             }
         )
         self.cfg = cfg
-        self.g_ab = ResNetGenerator(
-            num_filters=cfg.model.num_filters,
-            num_residual_blocks=cfg.model.num_residual_blocks,
-        )
-        self.g_ba = ResNetGenerator(
-            num_filters=cfg.model.num_filters,
-            num_residual_blocks=cfg.model.num_residual_blocks,
-        )
-        self.d_a = PatchDiscriminator(num_filters=cfg.model.num_filters)
-        self.d_b = PatchDiscriminator(num_filters=cfg.model.num_filters)
+        self.g_ab = _make_generator(cfg)
+        self.g_ba = _make_generator(cfg)
+        self.d_a  = _make_discriminator(cfg)
+        self.d_b  = _make_discriminator(cfg)
         self.criterion = CycleGANLoss(
             lambda_cycle=cfg.model.lambda_cycle,
             lambda_identity=cfg.model.lambda_identity,
