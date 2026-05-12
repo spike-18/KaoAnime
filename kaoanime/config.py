@@ -12,7 +12,7 @@ class DataConfig:
     test_b: str = "data/selfie2anime/testB"
     extra_roots_a: list[str] = field(default_factory=lambda: ["data/flickrfaceshq/resized"])
     extra_roots_b: list[str] = field(default_factory=lambda: ["data/animefacedataset/images"])
-    batch_size: int = 64
+    batch_size: int = 4
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True
@@ -27,6 +27,8 @@ class TrainConfig:
     precision: str = "16-mixed"
     log_every_n_steps: int = 20
     mlflow_tracking_uri: str = "http://10.0.111.233:9999"
+    gen_steps: int = 1
+    disc_steps: int = 1
     log_image_every_n_steps: int = 300
     fid_every_n_steps: int = 2000
     fid_num_images: int = 512
@@ -47,7 +49,7 @@ class ModelConfig:
     generator: str = "unet"       # "resnet" or "unet"
     discriminator: str = "resnet"    # "patch" or "resnet"
     lambda_cycle: float = 10.0
-    lambda_identity: float = 5.0
+    lambda_identity: float = 1
 
 
 @dataclass

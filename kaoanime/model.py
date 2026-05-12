@@ -72,50 +72,40 @@ class KaoAnimeModel(pl.LightningModule):
         real_a, real_b = batch["A"], batch["B"]
         opt_g, opt_d = self.optimizers()
 
-        # --- Forward pass ---
-        fake_b = self.g_ab(real_a)  # A → B
-        fake_a = self.g_ba(real_b)  # B → A
-        rec_a = self.g_ba(fake_b)  # A → B → A
-        rec_b = self.g_ab(fake_a)  # B → A → B
-        idt_b = self.g_ab(real_b)  # G_AB(real_b) should ≈ real_b
-        idt_a = self.g_ba(real_a)  # G_BA(real_a) should ≈ real_a
-
-        # --- Generator update ---
+        # --- Generator update(s) ---
         self.toggle_optimizer(opt_g)
-        disc_fake_a = self.d_a(fake_a)
-        disc_fake_b = self.d_b(fake_b)
-        loss_g = self.criterion.generator(
-            real_a,
-            real_b,
-            fake_a,
-            fake_b,
-            rec_a,
-            rec_b,
-            disc_fake_a,
-            disc_fake_b,
-            idt_a,
-            idt_b,
-        )
-        opt_g.zero_grad()
-        self.manual_backward(loss_g)
-        opt_g.step()
+        for _ in range(self.cfg.train.gen_steps):
+            fake_b = self.g_ab(real_a)  # A → B
+            fake_a = self.g_ba(real_b)  # B → A
+            rec_a  = self.g_ba(fake_b)  # A → B → A
+            rec_b  = self.g_ab(fake_a)  # B → A → B
+            idt_b  = self.g_ab(real_b)  # G_AB(real_b) should ≈ real_b
+            idt_a  = self.g_ba(real_a)  # G_BA(real_a) should ≈ real_a
+            disc_fake_a = self.d_a(fake_a)
+            disc_fake_b = self.d_b(fake_b)
+            loss_g = self.criterion.generator(
+                real_a, real_b, fake_a, fake_b, rec_a, rec_b,
+                disc_fake_a, disc_fake_b, idt_a, idt_b,
+            )
+            opt_g.zero_grad()
+            self.manual_backward(loss_g)
+            opt_g.step()
         self.untoggle_optimizer(opt_g)
+        # fake_a, fake_b from last generator iteration are used by disc and FID below
 
-        # --- Discriminator update ---
+        # --- Discriminator update(s) ---
         self.toggle_optimizer(opt_d)
-        disc_real_a = self.d_a(real_a)
-        disc_fake_a_det = self.d_a(self.pool_a.query(fake_a))
-        disc_real_b = self.d_b(real_b)
-        disc_fake_b_det = self.d_b(self.pool_b.query(fake_b))
-        loss_d = self.criterion.discriminator(
-            disc_real_a,
-            disc_fake_a_det,
-            disc_real_b,
-            disc_fake_b_det,
-        )
-        opt_d.zero_grad()
-        self.manual_backward(loss_d)
-        opt_d.step()
+        for _ in range(self.cfg.train.disc_steps):
+            disc_real_a     = self.d_a(real_a)
+            disc_fake_a_det = self.d_a(self.pool_a.query(fake_a))
+            disc_real_b     = self.d_b(real_b)
+            disc_fake_b_det = self.d_b(self.pool_b.query(fake_b))
+            loss_d = self.criterion.discriminator(
+                disc_real_a, disc_fake_a_det, disc_real_b, disc_fake_b_det,
+            )
+            opt_d.zero_grad()
+            self.manual_backward(loss_d)
+            opt_d.step()
         self.untoggle_optimizer(opt_d)
 
         self.log_dict(
