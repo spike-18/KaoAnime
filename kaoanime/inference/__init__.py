@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import torch
+from PIL import Image
 
 from kaoanime.utils import get_transforms, load_image, save_image
+from kaoanime.utils.align import AlignFaceProcessor
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
@@ -16,6 +19,7 @@ def run_inference(
     image_size: int = 128,
     direction: str = "a2b",
     device: str = "cuda",
+    align: bool = False,
 ) -> list[Path]:
     """Translate images from domain A→B (or B→A) and save to output_dir.
 
@@ -26,6 +30,8 @@ def run_inference(
         image_size: Size used for center-crop resize preprocessing.
         direction: "a2b" uses g_ab (selfie→anime); "b2a" uses g_ba (anime→selfie).
         device: Torch device string, e.g. "cuda" or "cpu".
+        align: Apply ArcFace landmark alignment before the transform pipeline.
+               Images where no face is detected fall back to standard centre-crop.
 
     Returns:
         List of output file paths that were written.
@@ -47,13 +53,24 @@ def run_inference(
     if not paths:
         raise FileNotFoundError(f"No images found in {input_path!r} (supported: {_IMAGE_EXTS})")
 
+    aligner = AlignFaceProcessor() if align else None
+
     written: list[Path] = []
     with torch.no_grad():
         for p in paths:
             img = load_image(p)
+            if aligner is not None:
+                arr = np.array(img)
+                aligned_arr = aligner.align(arr, size=image_size)
+                if aligned_arr is not None:
+                    img = Image.fromarray(aligned_arr)
+                # face not detected — fall back to standard centre-crop
             tensor = transform(img).unsqueeze(0).to(device)
             out = generator(tensor.float())[0]
             save_image(out, output_dir / p.name)
             written.append(output_dir / p.name)
+
+    if aligner is not None:
+        aligner.close()
 
     return written

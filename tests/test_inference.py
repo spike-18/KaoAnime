@@ -71,3 +71,23 @@ def test_infer_invalid_direction_raises(tmp_path):
     import pytest
     with pytest.raises(ValueError, match="direction must be"):
         run_inference(_cpu_model(), src, out_dir, image_size=128, direction="A2B", device="cpu")
+
+
+def test_infer_align_false_does_not_crash(tmp_path):
+    """align=False should work identically to the old signature."""
+    src = tmp_path / "input.jpg"
+    Image.new("RGB", (128, 128)).save(src)
+    out_dir = tmp_path / "out"
+    run_inference(_cpu_model(), src, out_dir, image_size=128,
+                  direction="a2b", device="cpu", align=False)
+    assert (out_dir / "input.jpg").exists()
+
+
+def test_infer_align_true_solid_image_still_produces_output(tmp_path):
+    """align=True on a faceless image falls back to centre-crop (no crash, output written)."""
+    src = tmp_path / "solid.jpg"
+    Image.new("RGB", (128, 128), color=(128, 128, 128)).save(src)
+    out_dir = tmp_path / "out"
+    run_inference(_cpu_model(), src, out_dir, image_size=128,
+                  direction="a2b", device="cpu", align=True)
+    assert (out_dir / "solid.jpg").exists()

@@ -17,7 +17,7 @@ def main(cfg: Config) -> None:
         raise ValueError("eval.input must be specified, e.g.: eval.input=data/selfie2anime/testA")
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model = KaoAnimeModel.load_from_checkpoint(cfg.eval.checkpoint, cfg=cfg, map_location=device)
+    model = KaoAnimeModel.load_from_checkpoint(cfg.eval.checkpoint, cfg=cfg, map_location=device, strict=False)
     model.to(device).float()
     model.eval()
 
@@ -28,6 +28,7 @@ def main(cfg: Config) -> None:
         image_size=cfg.data.image_size,
         direction=cfg.eval.direction,
         device=device,
+        align=cfg.eval.align,
     )
     print(f"Saved {len(written)} image(s) to {cfg.eval.output_dir}")
 

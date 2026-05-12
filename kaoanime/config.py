@@ -40,6 +40,7 @@ class EvalConfig:
     output_dir: str = "outputs/eval"
     input: str = ""
     direction: str = "a2b"
+    align: bool = False
 
 
 @dataclass
