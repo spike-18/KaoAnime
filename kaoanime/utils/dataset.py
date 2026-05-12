@@ -2,6 +2,8 @@
 from pathlib import Path
 from typing import Callable
 
+import numpy as np
+from PIL import Image
 from torch import Tensor
 from torch.utils.data import Dataset
 
@@ -9,6 +11,27 @@ from .image import load_image
 from .transforms import get_transforms
 
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+# One AlignFaceProcessor per DataLoader worker process, created on first use.
+# Stored at module level so it survives across __getitem__ calls within a worker.
+_worker_processor = None
+
+
+def _get_worker_processor():
+    global _worker_processor
+    if _worker_processor is None:
+        from .align import AlignFaceProcessor
+        _worker_processor = AlignFaceProcessor()
+    return _worker_processor
+
+
+def _align_pil(img: Image.Image, size: int) -> Image.Image:
+    """Try landmark alignment; return original PIL image unchanged on failure."""
+    arr = np.array(img)
+    aligned = _get_worker_processor().align(arr, size=size)
+    if aligned is not None:
+        return Image.fromarray(aligned)
+    return img
 
 
 def _collect_files(roots: list[str | Path]) -> list[Path]:
@@ -27,14 +50,19 @@ class UnpairedImageDataset(Dataset):
         train: bool = True,
         extra_roots_a: list[str | Path] | None = None,
         extra_roots_b: list[str | Path] | None = None,
+        align_a: bool = False,
     ) -> None:
         self._files_a = _collect_files([root_a] + list(extra_roots_a or []))
         self._files_b = _collect_files([root_b] + list(extra_roots_b or []))
         self._transform = self._create_transform(image_size, train)
+        self._image_size = image_size
+        self._align_a = align_a
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         img_a = load_image(self._files_a[index % len(self._files_a)])
         img_b = load_image(self._files_b[index % len(self._files_b)])
+        if self._align_a:
+            img_a = _align_pil(img_a, self._image_size)
         return {"A": self._transform(img_a), "B": self._transform(img_b)}
 
     def __len__(self) -> int:

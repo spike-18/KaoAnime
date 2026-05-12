@@ -16,6 +16,7 @@ class DataConfig:
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True
+    align_a: bool = False
 
 
 @dataclass

@@ -21,6 +21,7 @@ def main(cfg: Config) -> None:
         cfg.data.image_size,
         extra_roots_a=list(cfg.data.extra_roots_a),
         extra_roots_b=list(cfg.data.extra_roots_b),
+        align_a=cfg.data.align_a,
     )
 
     train_dl = create_dataloader(
