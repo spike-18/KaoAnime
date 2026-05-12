@@ -12,7 +12,7 @@ class DataConfig:
     test_b: str = "data/selfie2anime/testB"
     extra_roots_a: list[str] = field(default_factory=lambda: ["data/flickrfaceshq/resized"])
     extra_roots_b: list[str] = field(default_factory=lambda: ["data/animefacedataset/images"])
-    batch_size: int = 16
+    batch_size: int = 1
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True
@@ -22,14 +22,14 @@ class DataConfig:
 class TrainConfig:
     max_epochs: int = 20
     lr: float = 2e-4
-    lr_decay_start_epoch: int = 100
+    lr_decay_start_epoch: int = 10
     beta1: float = 0.5
     precision: str = "16-mixed"
-    log_every_n_steps: int = 10
+    log_every_n_steps: int = 20
     mlflow_tracking_uri: str = "http://10.0.111.233:9999"
-    log_image_every_n_steps: int = 150
-    fid_every_n_epochs: int = 1
-    fid_num_images: int = 2048
+    log_image_every_n_steps: int = 300
+    fid_every_n_steps: int = 2000
+    fid_num_images: int = 512
 
 
 @dataclass

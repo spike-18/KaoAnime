@@ -115,10 +115,10 @@ class KaoAnimeModel(pl.LightningModule):
             on_epoch=True,
         )
 
-        # --- FID accumulation (reuses fake_b from forward pass) ---
-        n_fid = self.cfg.train.fid_every_n_epochs
+        # --- FID accumulation (every step, until fid_num_images collected) ---
+        n_fid = self.cfg.train.fid_every_n_steps
         fid_limit = self.cfg.train.fid_num_images
-        if n_fid > 0 and (self.current_epoch + 1) % n_fid == 0 and self._fid_images_seen < fid_limit:
+        if n_fid > 0 and self._fid_images_seen < fid_limit:
             take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
             with torch.no_grad():
                 real_f = real_a[:take].float().add(1).div(2).clamp(0, 1)
@@ -128,6 +128,16 @@ class KaoAnimeModel(pl.LightningModule):
             self._fid_images_seen += take
 
         self._train_step += 1
+
+        # --- FID computation (every fid_every_n_steps steps) ---
+        if n_fid > 0 and self._train_step % n_fid == 0 and self._fid_images_seen > 0:
+            score = self.fid.compute()
+            if isinstance(self.logger, MLFlowLogger):
+                self.logger.experiment.log_metric(
+                    self.logger.run_id, "val/fid", score.item(), step=self._train_step
+                )
+            self.fid.reset()
+            self._fid_images_seen = 0
         n = self.cfg.train.log_image_every_n_steps
         if isinstance(self.logger, MLFlowLogger) and hasattr(self, "_log_batch") and self._train_step % n == 0:
             with torch.no_grad():
@@ -149,16 +159,6 @@ class KaoAnimeModel(pl.LightningModule):
     def on_train_epoch_end(self) -> None:
         self._sch_g.step()
         self._sch_d.step()
-
-        n_fid = self.cfg.train.fid_every_n_epochs
-        if n_fid > 0 and (self.current_epoch + 1) % n_fid == 0 and self._fid_images_seen > 0:
-            score = self.fid.compute()
-            if isinstance(self.logger, MLFlowLogger):
-                self.logger.experiment.log_metric(
-                    self.logger.run_id, "val/fid", score.item(), step=self.current_epoch + 1
-                )
-            self.fid.reset()
-            self._fid_images_seen = 0
 
     def _lr_lambda(self, epoch: int) -> float:
         decay_start = self.cfg.train.lr_decay_start_epoch
