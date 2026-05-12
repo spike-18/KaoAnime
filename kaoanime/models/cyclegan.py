@@ -207,8 +207,9 @@ class PatchDiscriminator(nn.Module):
 
 
 class _ResBlockD(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int) -> None:
+    def __init__(self, in_channels: int, out_channels: int, res_ratio: float = 0.1) -> None:
         super().__init__()
+        self.res_ratio = res_ratio
         sn = nn.utils.spectral_norm
         self.block = nn.Sequential(
             sn(nn.Conv2d(in_channels,  out_channels, 3, padding=1, bias=False)),
@@ -223,7 +224,7 @@ class _ResBlockD(nn.Module):
         self.act = nn.LeakyReLU(0.2, inplace=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.act(self.shortcut(x) + self.block(x))
+        return self.act(self.shortcut(x) + self.res_ratio * self.block(x))
 
 
 class ResNetDiscriminator(nn.Module):
