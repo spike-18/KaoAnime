@@ -17,6 +17,11 @@ class DataConfig:
     num_workers: int = 4
     pin_memory: bool = True
     align_a: bool = False
+    # Fixed crop transform for domain B (anime). Fractions of image size —
+    # resolution-independent, so these values work unchanged at 256×256.
+    anime_scale  : float = 1.85
+    anime_shift_x: float = 0.00
+    anime_shift_y: float = -0.01
 
 
 @dataclass

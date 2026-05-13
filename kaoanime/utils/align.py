@@ -10,15 +10,17 @@ import numpy as np
 from mediapipe.tasks import python as mp_tasks
 from mediapipe.tasks.python import vision as mp_vision
 
-# 5-point canonical landmarks at 128×128 (ArcFace standard scaled from 112px).
+# 5-point canonical landmarks at 128×128 measured as the average landmark positions
+# in CelebA images after center-crop to 128×128.
 # Order: left_eye, right_eye, nose_tip, left_mouth, right_mouth.
+# Multiply by (size / 128) to get coordinates at any other resolution.
 _CANONICAL_128 = np.array(
     [
-        [43.7,  59.1],
-        [84.0,  58.9],
-        [64.0,  81.6],
-        [47.5, 105.6],
-        [80.8, 105.4],
+        [77.5, 66.4],  # L-eye
+        [49.9, 66.4],  # R-eye
+        [63.2, 82.3],  # Nose
+        [51.2, 95.1],  # L-mouth
+        [76.2, 95.2],  # R-mouth
     ],
     dtype=np.float32,
 )
