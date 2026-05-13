@@ -14,7 +14,7 @@ from mediapipe.tasks.python import vision as mp_vision
 # in CelebA images after center-crop to 128×128.
 # Order: left_eye, right_eye, nose_tip, left_mouth, right_mouth.
 # Multiply by (size / 128) to get coordinates at any other resolution.
-_CANONICAL_128 = np.array(
+_CELEBA_REF_128 = np.array(
     [
         [77.5, 66.4],  # L-eye
         [49.9, 66.4],  # R-eye
@@ -65,8 +65,8 @@ def _src_pts(landmarks: list, h: int, w: int) -> np.ndarray:
     )
 
 
-def _canonical(size: int) -> np.ndarray:
-    return _CANONICAL_128 * (size / 128.0)
+def _celeba_ref(size: int) -> np.ndarray:
+    return _CELEBA_REF_128 * (size / 128.0)
 
 
 class AlignFaceProcessor:
@@ -104,7 +104,7 @@ class AlignFaceProcessor:
 
         h, w = image.shape[:2]
         pts_src = _src_pts(result.face_landmarks[0], h, w)
-        pts_dst = _canonical(size)
+        pts_dst = _celeba_ref(size)
 
         M, _ = cv2.estimateAffinePartial2D(pts_src, pts_dst, method=cv2.LMEDS)
         if M is None:
