@@ -6,22 +6,22 @@ from hydra.core.config_store import ConfigStore
 
 @dataclass
 class DataConfig:
-    root_a: str = "data/selfie2anime/trainA"
-    root_b: str = "data/selfie2anime/trainB"
-    test_a: str = "data/selfie2anime/testA"
-    test_b: str = "data/selfie2anime/testB"
-    extra_roots_a: list[str] = field(default_factory=lambda: ["data/flickrfaceshq/resized"])
-    extra_roots_b: list[str] = field(default_factory=lambda: ["data/animefacedataset/images"])
-    batch_size: int = 4
+    root_a: str = "/beta/home/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
+    root_b: str = "/beta/home/madorskii/datasets/alignedanimefaces/safebooru_jpeg"
+    test_a: str = "/beta/home/madorskii/datasets/CelebA/test"
+    test_b: str = "/beta/home/madorskii/datasets/alignedanimefaces/test"
+    extra_roots_a: list[str] = field(default_factory=list)
+    extra_roots_b: list[str] = field(default_factory=list)
+    batch_size: int = 8
     image_size: int = 128
     num_workers: int = 4
     pin_memory: bool = True
     align_a: bool = False
     # Fixed crop transform for domain B (anime). Fractions of image size —
     # resolution-independent, so these values work unchanged at 256×256.
-    anime_scale  : float = 1.85
+    anime_scale  : float = 1.20
     anime_shift_x: float = 0.00
-    anime_shift_y: float = -0.01
+    anime_shift_y: float = -0.02
 
 
 @dataclass
@@ -31,11 +31,11 @@ class TrainConfig:
     lr_decay_start_epoch: int = 30
     beta1: float = 0.5
     precision: str = "16-mixed"
-    log_every_n_steps: int = 20
+    log_every_n_steps: int = 50
     mlflow_tracking_uri: str = "http://10.0.111.233:9999"
     gen_steps: int = 1
     disc_steps: int = 1
-    log_image_every_n_steps: int = 300
+    log_image_every_n_steps: int = 5000
     fid_every_n_steps: int = 2000
     fid_num_images: int = 512
 
@@ -56,7 +56,7 @@ class ModelConfig:
     generator: str = "unet"       # "resnet" or "unet"
     discriminator: str = "resnet"    # "patch" or "resnet"
     lambda_cycle: float = 10.0
-    lambda_identity: float = 1
+    lambda_identity: float = 10.0
 
 
 @dataclass

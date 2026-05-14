@@ -16,11 +16,11 @@ from mediapipe.tasks.python import vision as mp_vision
 # Multiply by (size / 128) to get coordinates at any other resolution.
 _CELEBA_REF_128 = np.array(
     [
-        [77.5, 66.4],  # L-eye
-        [49.9, 66.4],  # R-eye
-        [63.2, 82.3],  # Nose
-        [51.2, 95.1],  # L-mouth
-        [76.2, 95.2],  # R-mouth
+        [77.2, 65.7],  # L-eye
+        [50.2, 65.7],  # R-eye
+        [62.6, 78.6],  # Nose
+        [51.8, 89.5],  # L-mouth
+        [75.4, 89.5],  # R-mouth
     ],
     dtype=np.float32,
 )

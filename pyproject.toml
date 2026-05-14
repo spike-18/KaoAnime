@@ -17,6 +17,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "ipywidgets>=8.1.8",
+    "jupyter>=1.1.1",
     "pre-commit>=4.6.0",
     "pytest>=8.0.0",
 ]
