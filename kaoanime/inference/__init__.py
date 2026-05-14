@@ -24,11 +24,12 @@ def run_inference(
     """Translate images from domain A→B (or B→A) and save to output_dir.
 
     Args:
-        model: Loaded KaoAnimeModel instance.
+        model: Loaded KaoAnimeModel or NOTModel instance.
         input_path: Path to a single image file or a directory of images.
         output_dir: Directory where translated images are written.
         image_size: Size used for center-crop resize preprocessing.
-        direction: "a2b" uses g_ab (selfie→anime); "b2a" uses g_ba (anime→selfie).
+        direction: "a2b" uses g_ab/T (selfie→anime); "b2a" uses g_ba (anime→selfie,
+                   CycleGAN only — NOT model is unidirectional).
         device: Torch device string, e.g. "cuda" or "cpu".
         align: Apply ArcFace landmark alignment before the transform pipeline.
                Images where no face is detected fall back to standard centre-crop.
@@ -43,7 +44,12 @@ def run_inference(
     transform = get_transforms("test", image_size=image_size)
     if direction not in {"a2b", "b2a"}:
         raise ValueError(f"direction must be 'a2b' or 'b2a', got {direction!r}")
-    generator = model.g_ab if direction == "a2b" else model.g_ba
+    if direction == "a2b":
+        generator = model.g_ab if hasattr(model, "g_ab") else model.T
+    else:
+        if not hasattr(model, "g_ba"):
+            raise ValueError("b2a direction is not supported for NOT model (unidirectional transport)")
+        generator = model.g_ba
 
     if input_path.is_file():
         paths = [input_path]
