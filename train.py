@@ -6,11 +6,20 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 
 from kaoanime.config import Config, register_configs
-from kaoanime.model import KaoAnimeModel
+from kaoanime.model_cyclegan import KaoAnimeModel
+from kaoanime.model_not import NOTModel
 from kaoanime.utils import UnpairedImageDataset, create_dataloader
 
 torch.set_float32_matmul_precision("medium")
 register_configs()
+
+
+def _make_model(cfg: Config) -> pl.LightningModule:
+    if cfg.model_type == "cyclegan":
+        return KaoAnimeModel(cfg)
+    if cfg.model_type == "not":
+        return NOTModel(cfg)
+    raise ValueError(f"Unknown model_type {cfg.model_type!r}. Choose 'cyclegan' or 'not'.")
 
 
 @hydra.main(version_base=None, config_path=None, config_name="config")
@@ -35,28 +44,42 @@ def main(cfg: Config) -> None:
         pin_memory=cfg.data.pin_memory,
     )
 
-    model = KaoAnimeModel(cfg)
+    model = _make_model(cfg)
 
-    logger = MLFlowLogger(
-        experiment_name="kaoanime",
-        tracking_uri=cfg.train.mlflow_tracking_uri,
-    )
+    if cfg.model_type == "not":
+        logger = MLFlowLogger(
+            experiment_name="kaoanime-not",
+            tracking_uri=cfg.not_.mlflow_tracking_uri,
+        )
+        trainer = pl.Trainer(
+            devices=1,
+            accelerator="auto",
+            max_steps=cfg.not_.max_steps,
+            precision=cfg.not_.precision,
+            log_every_n_steps=cfg.not_.log_every_n_steps,
+            logger=logger,
+            callbacks=[ModelCheckpoint(filename="step{step:06d}", save_last=True, save_top_k=0)],
+        )
+    else:
+        logger = MLFlowLogger(
+            experiment_name="kaoanime",
+            tracking_uri=cfg.train.mlflow_tracking_uri,
+        )
+        trainer = pl.Trainer(
+            devices=1,
+            accelerator="auto",
+            max_epochs=cfg.train.max_epochs,
+            precision=cfg.train.precision,
+            log_every_n_steps=cfg.train.log_every_n_steps,
+            logger=logger,
+            callbacks=[ModelCheckpoint(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)],
+        )
 
-    ckpt_callback = ModelCheckpoint(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)
-
-    trainer = pl.Trainer(
-        devices=1,
-        accelerator="auto",
-        max_epochs=cfg.train.max_epochs,
-        precision=cfg.train.precision,
-        log_every_n_steps=cfg.train.log_every_n_steps,
-        logger=logger,
-        callbacks=[ckpt_callback],
-    )
     trainer.fit(model, train_dl)
 
-    if ckpt_callback.last_model_path:
-        logger.experiment.log_artifact(logger.run_id, ckpt_callback.last_model_path)
+    ckpt_path = trainer.checkpoint_callback.last_model_path
+    if ckpt_path:
+        logger.experiment.log_artifact(logger.run_id, ckpt_path)
 
 
 if __name__ == "__main__":

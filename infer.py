@@ -4,7 +4,7 @@ import hydra
 
 from kaoanime.config import Config, register_configs
 from kaoanime.inference import run_inference
-from kaoanime.model import KaoAnimeModel
+from kaoanime.model_cyclegan import KaoAnimeModel
 
 register_configs()
 

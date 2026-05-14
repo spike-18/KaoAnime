@@ -3,7 +3,7 @@ import hydra
 import lightning as pl
 
 from kaoanime.config import Config, register_configs
-from kaoanime.model import KaoAnimeModel
+from kaoanime.model_cyclegan import KaoAnimeModel
 from kaoanime.utils import UnpairedImageDataset, create_dataloader, get_transforms
 
 register_configs()

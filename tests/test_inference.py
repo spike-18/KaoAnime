@@ -5,7 +5,7 @@ from PIL import Image
 
 from kaoanime.config import Config
 from kaoanime.inference import run_inference
-from kaoanime.model import KaoAnimeModel
+from kaoanime.model_cyclegan import KaoAnimeModel
 
 
 def _make_images(directory: Path, count: int) -> None:

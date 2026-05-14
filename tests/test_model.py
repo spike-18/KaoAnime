@@ -5,7 +5,7 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 from torch.utils.data import DataLoader
 
 from kaoanime.config import Config
-from kaoanime.model import KaoAnimeModel
+from kaoanime.model_cyclegan import KaoAnimeModel
 
 
 def test_model_forward_pass():
