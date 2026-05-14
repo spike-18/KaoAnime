@@ -55,6 +55,7 @@ def main(cfg: Config) -> None:
             devices=1,
             accelerator="auto",
             max_steps=cfg.not_.max_steps,
+            max_epochs=-1,
             precision=cfg.not_.precision,
             log_every_n_steps=cfg.not_.log_every_n_steps,
             logger=logger,
