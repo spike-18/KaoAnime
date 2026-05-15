@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from hydra.core.config_store import ConfigStore
 
-from kaoanime.config_cyclegan import ModelConfig, TrainConfig
+from kaoanime.config_cyclegan import CycleGANModelConfig, CycleGANTrainConfig
 from kaoanime.config_not import NOTConfig
 
 
@@ -15,9 +15,9 @@ class DataConfig:
     test_b: str = "/beta/home/madorskii/datasets/alignedanimefaces/test"
     extra_roots_a: list[str] = field(default_factory=list)
     extra_roots_b: list[str] = field(default_factory=list)
-    batch_size: int = 8
+    batch_size: int = 64
     image_size: int = 128
-    num_workers: int = 4
+    num_workers: int = 8
     pin_memory: bool = True
     align_a: bool = False
     # Fixed crop transform for domain B (anime). Fractions of image size —
@@ -42,8 +42,8 @@ class Config:
     data: DataConfig = field(default_factory=DataConfig)
     eval: EvalConfig = field(default_factory=EvalConfig)
     # CycleGAN-specific (ignored when model_type="not")
-    train: TrainConfig = field(default_factory=TrainConfig)
-    model: ModelConfig = field(default_factory=ModelConfig)
+    train: CycleGANTrainConfig = field(default_factory=CycleGANTrainConfig)
+    model: CycleGANModelConfig = field(default_factory=CycleGANModelConfig)
     # NOT-specific (ignored when model_type="cyclegan")
     not_: NOTConfig = field(default_factory=NOTConfig)
 
