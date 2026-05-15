@@ -51,10 +51,14 @@ def main(cfg: Config) -> None:
             experiment_name="kaoanime-not",
             tracking_uri=cfg.not_.mlflow_tracking_uri,
         )
+        # Lightning increments global_step once per optimizer.step() call in manual
+        # optimization mode, not once per training_step. With t_iters+1 optimizer
+        # steps per batch, multiply so not_.max_steps means "batch iterations".
+        _lightning_max_steps = cfg.not_.max_steps * (cfg.not_.t_iters + 1)
         trainer = pl.Trainer(
             devices=1,
             accelerator="auto",
-            max_steps=cfg.not_.max_steps,
+            max_steps=_lightning_max_steps,
             max_epochs=-1,
             precision=cfg.not_.precision,
             log_every_n_steps=cfg.not_.log_every_n_steps,
