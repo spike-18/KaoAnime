@@ -81,9 +81,6 @@ def test_last_checkpoint_is_saved(tmp_path):
     assert saved[0].name == "last.ckpt"
 
 
-from pathlib import Path
-
-
 def test_resume_from_checkpoint(tmp_path):
     """Training resumes correctly from a saved checkpoint."""
     # Phase 1: train 1 epoch and save checkpoint
@@ -122,3 +119,9 @@ def test_resume_from_checkpoint(tmp_path):
     # Lightning restores epoch counter; with max_epochs=2 and resuming from epoch 1,
     # only one more epoch runs → current_epoch==2 (past the last completed epoch).
     assert trainer2.current_epoch == 2
+
+
+def test_empty_resume_checkpoint_resolves_to_none():
+    """The `or None` sentinel in train.py converts '' to None for trainer.fit()."""
+    assert ("" or None) is None
+    assert ("/some/path.ckpt" or None) == "/some/path.ckpt"

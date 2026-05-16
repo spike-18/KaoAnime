@@ -64,7 +64,7 @@ def test_on_train_epoch_end_calls_super_and_logs(tmp_path):
     mock_trainer = MagicMock()
     mock_trainer.logger = mock_logger
 
-    with patch.object(type(cb).__bases__[0], "on_train_epoch_end") as mock_super:
+    with patch("lightning.pytorch.callbacks.ModelCheckpoint.on_train_epoch_end") as mock_super:
         cb.on_train_epoch_end(mock_trainer, MagicMock())
         mock_super.assert_called_once()
 
@@ -82,7 +82,7 @@ def test_on_train_end_calls_super_and_logs(tmp_path):
     mock_trainer = MagicMock()
     mock_trainer.logger = mock_logger
 
-    with patch.object(type(cb).__bases__[0], "on_train_end") as mock_super:
+    with patch("lightning.pytorch.callbacks.ModelCheckpoint.on_train_end") as mock_super:
         cb.on_train_end(mock_trainer, MagicMock())
         mock_super.assert_called_once()
 
