@@ -33,24 +33,26 @@ def test_kaiming_init_sets_weight_std():
     assert 0.03 < std < 0.15, f"Expected kaiming std ~0.057, got {std:.4f}"
 
 
-def test_normal_and_kaiming_differ():
-    torch.manual_seed(0)
-    m1 = nn.Conv2d(64, 128, 3, padding=1, bias=False)
-    init_weights(m1, "normal", gain=0.02)
-
-    torch.manual_seed(0)
-    m2 = nn.Conv2d(64, 128, 3, padding=1, bias=False)
-    init_weights(m2, "kaiming")
-
-    assert not torch.allclose(m1.weight.data, m2.weight.data)
+def test_normal_init_mean_near_zero():
+    # Normal(0, 0.02) should produce weights with mean very close to 0
+    m = nn.Conv2d(64, 128, 3, padding=1, bias=False)
+    init_weights(m, "normal", gain=0.02)
+    mean = m.weight.data.mean().item()
+    assert abs(mean) < 0.005, f"Expected mean≈0, got {mean:.4f}"
 
 
 def test_spectral_norm_layer_init():
     m = nn.utils.spectral_norm(nn.Conv2d(8, 16, 3, padding=1))
     init_weights(m, "normal", gain=0.02)
-    assert hasattr(m, "weight_orig")
     std = m.weight_orig.data.std().item()
     assert 0.005 < std < 0.04, f"weight_orig std should be ≈0.02, got {std:.4f}"
+
+
+def test_unknown_init_type_raises():
+    import pytest
+    m = nn.Conv2d(8, 16, 3, padding=1)
+    with pytest.raises(ValueError, match="Unknown init_type"):
+        init_weights(m, "xavier")
 
 
 def test_init_weights_applies_to_sequential():
