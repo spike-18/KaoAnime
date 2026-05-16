@@ -63,25 +63,23 @@ class UnpairedImageDataset(Dataset):
         extra_roots_a: list[str | Path] | None = None,
         extra_roots_b: list[str | Path] | None = None,
         align_a: bool = False,
-        anime_scale  : float = 1.85,
-        anime_shift_x: float = 0.00,
-        anime_shift_y: float = -0.01,
+        anime_offset_x: int = 0,
+        anime_offset_y: int = -7,
     ) -> None:
         self._files_a = _collect_files([root_a] + list(extra_roots_a or []))
         self._files_b = _collect_files([root_b] + list(extra_roots_b or []))
         self._transform = self._create_transform(image_size, train)
         self._image_size = image_size
         self._align_a = align_a
-        self._anime_scale   = anime_scale
-        self._anime_shift_x = anime_shift_x
-        self._anime_shift_y = anime_shift_y
+        self._anime_offset_x = anime_offset_x
+        self._anime_offset_y = anime_offset_y
 
     def __getitem__(self, index: int) -> dict[str, Tensor]:
         img_a = load_image(self._files_a[index % len(self._files_a)])
         img_b = load_image(self._files_b[index % len(self._files_b)])
         if self._align_a:
             img_a = _align_pil(img_a, self._image_size)
-        img_b = _anime_crop(img_b)
+        img_b = _anime_crop(img_b, self._anime_offset_x, self._anime_offset_y)
         return {"A": self._transform(img_a), "B": self._transform(img_b)}
 
     def __len__(self) -> int:

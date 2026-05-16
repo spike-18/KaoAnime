@@ -31,9 +31,8 @@ def main(cfg: Config) -> None:
         extra_roots_a=list(cfg.data.extra_roots_a),
         extra_roots_b=list(cfg.data.extra_roots_b),
         align_a=cfg.data.align_a,
-        anime_scale=cfg.data.anime_scale,
-        anime_shift_x=cfg.data.anime_shift_x,
-        anime_shift_y=cfg.data.anime_shift_y,
+        anime_offset_x=cfg.data.anime_offset_x,
+        anime_offset_y=cfg.data.anime_offset_y,
     )
 
     train_dl = create_dataloader(

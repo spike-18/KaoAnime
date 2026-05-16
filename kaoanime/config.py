@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 
 from hydra.core.config_store import ConfigStore
 
-from kaoanime.config_cyclegan import CycleGANModelConfig, CycleGANTrainConfig
+from kaoanime.config_cyclegan import CycleGANConfig, CycleGANTrainConfig
 from kaoanime.config_not import NOTConfig
 
 
@@ -20,11 +20,9 @@ class DataConfig:
     num_workers: int = 8
     pin_memory: bool = True
     align_a: bool = False
-    # Fixed crop transform for domain B (anime). Fractions of image size —
-    # resolution-independent, so these values work unchanged at 256×256.
-    anime_scale  : float = 1.20
-    anime_shift_x: float = 0.00
-    anime_shift_y: float = -0.02
+    # Fixed crop transform for domain B (anime). Pixel offsets from center (256, 256).
+    anime_offset_x: int = 0
+    anime_offset_y: int = -7
 
 
 @dataclass
@@ -43,7 +41,7 @@ class Config:
     eval: EvalConfig = field(default_factory=EvalConfig)
     # CycleGAN-specific (ignored when model_type="not")
     train: CycleGANTrainConfig = field(default_factory=CycleGANTrainConfig)
-    model: CycleGANModelConfig = field(default_factory=CycleGANModelConfig)
+    model: CycleGANConfig = field(default_factory=CycleGANConfig)
     # NOT-specific (ignored when model_type="cyclegan")
     not_: NOTConfig = field(default_factory=NOTConfig)
 
