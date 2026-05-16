@@ -1,16 +1,14 @@
+from .not_potential import NOTPotential
 from .patch_discriminator import PatchDiscriminator
 from .resnet import ResNetDiscriminator, ResNetGenerator
 from .unet import UNetGenerator
-
-try:
-    from .not_potential import NOTPotential
-except ModuleNotFoundError:
-    pass  # not_potential.py will be added in a subsequent task
+from .weights_init import init_weights
 
 __all__ = [
+    "NOTPotential",
     "PatchDiscriminator",
     "ResNetDiscriminator",
     "ResNetGenerator",
     "UNetGenerator",
-    "NOTPotential",
+    "init_weights",
 ]

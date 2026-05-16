@@ -3,6 +3,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
+from kaoanime.models.weights_init import init_weights
+
 
 class _ResBlockNOT(nn.Module):
     """Residual block without BN (reference ResNetBlock, bn=False).
@@ -57,6 +59,7 @@ class NOTPotential(nn.Module):
             blocks.append(_ResBlockNOT(ch[i], ch[i + 1]))
         self.features = nn.Sequential(*blocks)
         self.classifier = nn.Linear(ch[-1], 1)
+        init_weights(self, "kaiming")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_conv(x)

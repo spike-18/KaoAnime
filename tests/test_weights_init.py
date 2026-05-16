@@ -64,3 +64,53 @@ def test_init_weights_applies_to_sequential():
     for layer in seq:
         std = layer.weight.data.std().item()
         assert 0.005 < std < 0.04
+
+
+from kaoanime.models import (
+    NOTPotential,
+    PatchDiscriminator,
+    ResNetDiscriminator,
+    ResNetGenerator,
+    UNetGenerator,
+)
+
+
+def _conv_weight_std(model: nn.Module) -> float:
+    """Concatenate all Conv2d/ConvTranspose2d weights and return their std."""
+    weights = []
+    for m in model.modules():
+        if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d)):
+            w = m.weight_orig if hasattr(m, "weight_orig") else m.weight
+            weights.append(w.data.flatten())
+    assert weights, "No conv layers found"
+    return torch.cat(weights).std().item()
+
+
+def test_unet_generator_normal_init():
+    g = UNetGenerator(num_filters=16)
+    std = _conv_weight_std(g)
+    assert std < 0.04, f"UNetGenerator std should be ≈0.02, got {std:.4f}"
+
+
+def test_resnet_generator_normal_init():
+    g = ResNetGenerator(num_filters=16, num_residual_blocks=2)
+    std = _conv_weight_std(g)
+    assert std < 0.04, f"ResNetGenerator std should be ≈0.02, got {std:.4f}"
+
+
+def test_patch_discriminator_normal_init():
+    d = PatchDiscriminator(num_filters=16)
+    std = _conv_weight_std(d)
+    assert std < 0.04, f"PatchDiscriminator std should be ≈0.02, got {std:.4f}"
+
+
+def test_resnet_discriminator_kaiming_init():
+    d = ResNetDiscriminator(num_filters=16)
+    std = _conv_weight_std(d)
+    assert std > 0.04, f"ResNetDiscriminator kaiming std should be >0.04, got {std:.4f}"
+
+
+def test_not_potential_kaiming_init():
+    f = NOTPotential(num_filters=16)
+    std = _conv_weight_std(f)
+    assert std > 0.04, f"NOTPotential kaiming std should be >0.04, got {std:.4f}"

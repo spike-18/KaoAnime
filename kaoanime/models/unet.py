@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from kaoanime.models.weights_init import init_weights
+
 
 class _DoubleConv(nn.Module):
     def __init__(self, in_ch: int, out_ch: int, mid_ch: int | None = None) -> None:
@@ -69,6 +71,7 @@ class UNetGenerator(nn.Module):
         self.up3   = _Up(4 * f,   2 * f // factor, bilinear)
         self.up4   = _Up(2 * f,   f,               bilinear)
         self.outc  = nn.Sequential(nn.Conv2d(f, out_channels, kernel_size=1), nn.Tanh())
+        init_weights(self, "normal", gain=0.02)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x1 = self.inc(x)

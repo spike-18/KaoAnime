@@ -3,6 +3,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
+from kaoanime.models.weights_init import init_weights
+
 
 class PatchDiscriminator(nn.Module):
     """70×70 PatchGAN discriminator with spectral norm."""
@@ -23,6 +25,7 @@ class PatchDiscriminator(nn.Module):
             nn.LeakyReLU(0.2, inplace=True),
             nn.utils.spectral_norm(nn.Conv2d(nf * 8, 1, kernel_size=4, stride=1, padding=1)),
         )
+        init_weights(self, "normal", gain=0.02)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)

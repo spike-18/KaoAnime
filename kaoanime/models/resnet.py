@@ -3,6 +3,8 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
+from kaoanime.models.weights_init import init_weights
+
 
 class _ResBlock(nn.Module):
     def __init__(self, channels: int) -> None:
@@ -63,6 +65,7 @@ class ResNetGenerator(nn.Module):
             nn.Tanh(),
         ]
         self.model = nn.Sequential(*layers)
+        init_weights(self, "normal", gain=0.02)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.model(x)
@@ -103,6 +106,7 @@ class ResNetDiscriminator(nn.Module):
                 blocks.append(nn.AvgPool2d(2))
         self.features = nn.Sequential(*blocks)
         self.classifier = nn.utils.spectral_norm(nn.Linear(ch[-1], 1))
+        init_weights(self, "kaiming")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.features(x)
