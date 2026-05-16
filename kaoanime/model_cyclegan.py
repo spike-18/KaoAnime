@@ -120,7 +120,7 @@ class KaoAnimeModel(pl.LightningModule):
         if n_fid > 0 and self._fid_images_seen < fid_limit:
             take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
             with torch.no_grad():
-                real_f = real_a[:take].float().add(1).div(2).clamp(0, 1)
+                real_f = real_b[:take].float().add(1).div(2).clamp(0, 1)
                 fake_f = fake_b[:take].detach().float().add(1).div(2).clamp(0, 1)
             self.fid.update(real_f, real=True)
             self.fid.update(fake_f, real=False)
@@ -168,17 +168,33 @@ class KaoAnimeModel(pl.LightningModule):
 
     def configure_optimizers(self):
         lr = self.cfg.train.lr
-        betas = (self.cfg.train.beta1, 0.999)
-        opt_g = torch.optim.Adam(
-            list(self.g_ab.parameters()) + list(self.g_ba.parameters()),
-            lr=lr,
-            betas=betas,
-        )
-        opt_d = torch.optim.Adam(
-            list(self.d_a.parameters()) + list(self.d_b.parameters()),
-            lr=lr,
-            betas=betas,
-        )
+
+        if self.cfg.model_type == 'not':
+            betas = (self.cfg.train.beta1, 0.999)
+            opt_g = torch.optim.Adam(
+                list(self.g_ab.parameters()) + list(self.g_ba.parameters()),
+                lr=lr,
+                betas=betas,
+            )
+            opt_d = torch.optim.Adam(
+                list(self.d_a.parameters()) + list(self.d_b.parameters()),
+                lr=lr,
+                betas=betas,
+            )
+        else:
+            alpha = self.cfg.train.alpha
+            opt_g = torch.optim.RMSprop(
+                list(self.g_ab.parameters()) + list(self.g_ba.parameters()),
+                lr=lr,
+                alpha=alpha,
+            )
+            opt_d = torch.optim.RMSprop(
+                list(self.d_a.parameters()) + list(self.d_b.parameters()),
+                lr=lr,
+                alpha=alpha,
+            )
+
+
         self._sch_g = torch.optim.lr_scheduler.LambdaLR(opt_g, self._lr_lambda)
         self._sch_d = torch.optim.lr_scheduler.LambdaLR(opt_d, self._lr_lambda)
         return [opt_g, opt_d]
