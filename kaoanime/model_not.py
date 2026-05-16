@@ -79,8 +79,16 @@ class NOTModel(pl.LightningModule):
         opt_f.step()
         self.untoggle_optimizer(opt_f)
 
+        f_on_fake = self.f(T_X).mean()
+        f_on_real = self.f(real_b).mean()
         self.log_dict(
-            {"train/t_loss": t_loss, "train/f_loss": f_loss},
+            {
+                "train/t_loss": t_loss,
+                "train/f_loss": f_loss,
+                "train/f_on_fake": f_on_fake,
+                "train/f_on_real": f_on_real,
+                "train/mse": F.mse_loss(real_a, T_X.detach()),
+            },
             on_step=True,
             on_epoch=True,
         )
