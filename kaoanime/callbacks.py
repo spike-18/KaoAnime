@@ -7,10 +7,11 @@ from lightning.pytorch.loggers import MLFlowLogger
 class MLflowCheckpointCallback(ModelCheckpoint):
     """ModelCheckpoint that uploads last.ckpt to MLflow after each save.
 
-    Overrides on_train_epoch_end and on_train_end so the checkpoint is
-    archived during training. Lightning calls both hooks on graceful
-    interrupts (Ctrl+C), ensuring the checkpoint is logged even when
-    training is stopped early.
+    on_train_epoch_end uploads after each completed epoch, so the latest
+    checkpoint is always in MLflow. on_train_end catches the case where
+    Lightning deferred the final save to train end (e.g. no validation loop).
+    Note: mid-epoch interrupts (Ctrl+C) call on_exception, not on_train_end,
+    and are not covered by this callback.
     """
 
     def on_train_epoch_end(self, trainer, pl_module) -> None:
@@ -18,8 +19,10 @@ class MLflowCheckpointCallback(ModelCheckpoint):
         self._log_last_to_mlflow(trainer)
 
     def on_train_end(self, trainer, pl_module) -> None:
+        path_before = self.last_model_path
         super().on_train_end(trainer, pl_module)
-        self._log_last_to_mlflow(trainer)
+        if self.last_model_path and self.last_model_path != path_before:
+            self._log_last_to_mlflow(trainer)
 
     def _log_last_to_mlflow(self, trainer) -> None:
         path = self.last_model_path
