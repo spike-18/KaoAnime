@@ -79,3 +79,46 @@ def test_last_checkpoint_is_saved(tmp_path):
     saved = list(tmp_path.glob("*.ckpt"))
     assert len(saved) == 1, f"Expected 1 checkpoint, found: {saved}"
     assert saved[0].name == "last.ckpt"
+
+
+from pathlib import Path
+
+
+def test_resume_from_checkpoint(tmp_path):
+    """Training resumes correctly from a saved checkpoint."""
+    # Phase 1: train 1 epoch and save checkpoint
+    ckpt_cb = ModelCheckpoint(
+        dirpath=tmp_path,
+        save_last=True,
+        save_top_k=0,
+    )
+    model = KaoAnimeModel(Config())
+    trainer1 = Trainer(
+        max_epochs=1,
+        accelerator="cpu",
+        logger=False,
+        callbacks=[ckpt_cb],
+        enable_progress_bar=False,
+    )
+    trainer1.fit(model, train_dataloaders=_make_fake_loader())
+    ckpt_path = tmp_path / "last.ckpt"
+    assert ckpt_path.exists(), "Checkpoint was not saved after phase 1"
+
+    # Phase 2: resume and train to max_epochs=2 total
+    ckpt_cb2 = ModelCheckpoint(
+        dirpath=tmp_path / "run2",
+        save_last=True,
+        save_top_k=0,
+    )
+    model2 = KaoAnimeModel(Config())
+    trainer2 = Trainer(
+        max_epochs=2,
+        accelerator="cpu",
+        logger=False,
+        callbacks=[ckpt_cb2],
+        enable_progress_bar=False,
+    )
+    trainer2.fit(model2, train_dataloaders=_make_fake_loader(), ckpt_path=str(ckpt_path))
+    # Lightning restores epoch counter; with max_epochs=2 and resuming from epoch 1,
+    # only one more epoch runs → current_epoch==2 (past the last completed epoch).
+    assert trainer2.current_epoch == 2

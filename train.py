@@ -2,9 +2,9 @@
 import hydra
 import lightning as pl
 import torch
-from lightning.pytorch.callbacks import ModelCheckpoint
 from lightning.pytorch.loggers import MLFlowLogger
 
+from kaoanime.callbacks import MLflowCheckpointCallback
 from kaoanime.config import Config, register_configs
 from kaoanime.model_cyclegan import KaoAnimeModel
 from kaoanime.model_not import NOTModel
@@ -50,9 +50,6 @@ def main(cfg: Config) -> None:
             experiment_name="kaoanime-not",
             tracking_uri=cfg.not_.mlflow_tracking_uri,
         )
-        # Lightning increments global_step once per optimizer.step() call in manual
-        # optimization mode, not once per training_step. With t_iters+1 optimizer
-        # steps per batch, multiply so not_.max_steps means "batch iterations".
         _lightning_max_steps = cfg.not_.max_steps * (cfg.not_.t_iters + 1)
         trainer = pl.Trainer(
             devices=1,
@@ -62,8 +59,9 @@ def main(cfg: Config) -> None:
             precision=cfg.not_.precision,
             log_every_n_steps=cfg.not_.log_every_n_steps,
             logger=logger,
-            callbacks=[ModelCheckpoint(filename="step{step:06d}", save_last=True, save_top_k=0)],
+            callbacks=[MLflowCheckpointCallback(filename="step{step:06d}", save_last=True, save_top_k=0)],
         )
+        ckpt_path = cfg.not_.resume_from_checkpoint or None
     else:
         logger = MLFlowLogger(
             experiment_name="kaoanime",
@@ -76,14 +74,11 @@ def main(cfg: Config) -> None:
             precision=cfg.train.precision,
             log_every_n_steps=cfg.train.log_every_n_steps,
             logger=logger,
-            callbacks=[ModelCheckpoint(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)],
+            callbacks=[MLflowCheckpointCallback(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)],
         )
+        ckpt_path = cfg.train.resume_from_checkpoint or None
 
-    trainer.fit(model, train_dl)
-
-    ckpt_path = trainer.checkpoint_callback.last_model_path
-    if ckpt_path:
-        logger.experiment.log_artifact(logger.run_id, ckpt_path)
+    trainer.fit(model, train_dl, ckpt_path=ckpt_path)
 
 
 if __name__ == "__main__":

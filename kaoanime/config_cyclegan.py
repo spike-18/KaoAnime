@@ -16,10 +16,12 @@ class CycleGANTrainConfig:
     log_image_every_n_steps: int = 5000
     fid_every_n_steps: int = 2000
     fid_num_images: int = 512
+    beta1: float = 0.5
+    resume_from_checkpoint: str = ""
 
 
 @dataclass
-class CycleGANModelConfig:
+class CycleGANConfig:
     num_filters: int = 48          # matches NOT t_filters default
     num_residual_blocks: int = 9
     generator: str = "unet"        # "resnet" or "unet"
