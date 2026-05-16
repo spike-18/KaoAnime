@@ -1,3 +1,4 @@
+import pytest
 import torch
 import torch.nn as nn
 
@@ -49,7 +50,6 @@ def test_spectral_norm_layer_init():
 
 
 def test_unknown_init_type_raises():
-    import pytest
     m = nn.Conv2d(8, 16, 3, padding=1)
     with pytest.raises(ValueError, match="Unknown init_type"):
         init_weights(m, "xavier")
