@@ -34,17 +34,16 @@ def _align_pil(img: Image.Image, size: int) -> Image.Image:
     return img
 
 
-def _anime_crop(img: Image.Image, scale: float, shift_x: float, shift_y: float) -> Image.Image:
-    """Fixed-ratio crop for domain B (anime). Parameters are fractions of image size."""
-    w, h = img.size
-    crop = int(min(w, h) / scale)
-    cx = w / 2 + shift_x * w
-    cy = h / 2 + shift_y * h
-    x0 = int(max(0, cx - crop / 2))
-    y0 = int(max(0, cy - crop / 2))
-    x1 = min(w, x0 + crop)
-    y1 = min(h, y0 + crop)
-    return img.crop((x0, y0, x1, y1))
+def _anime_crop(img: Image.Image, offset_x: int = 0, offset_y: int = -7) -> Image.Image:
+    """Resize to 512×512, crop 256×256 centred at (256+offset_x, 256+offset_y).
+
+    The returned image is 256×256 PIL; the caller's transform resizes it to
+    the final model input size.
+    """
+    s512 = img.resize((512, 512), Image.LANCZOS)
+    cx = 256 + offset_x
+    cy = 256 + offset_y
+    return s512.crop((cx - 128, cy - 128, cx + 128, cy + 128))
 
 
 def _collect_files(roots: list[str | Path]) -> list[Path]:
@@ -82,7 +81,7 @@ class UnpairedImageDataset(Dataset):
         img_b = load_image(self._files_b[index % len(self._files_b)])
         if self._align_a:
             img_a = _align_pil(img_a, self._image_size)
-        img_b = _anime_crop(img_b, self._anime_scale, self._anime_shift_x, self._anime_shift_y)
+        img_b = _anime_crop(img_b)
         return {"A": self._transform(img_a), "B": self._transform(img_b)}
 
     def __len__(self) -> int:
