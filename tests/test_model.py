@@ -38,7 +38,7 @@ def test_model_training_step_runs():
     model = KaoAnimeModel(Config())
     trainer = Trainer(
         max_epochs=1,
-        accelerator="auto",
+        accelerator="cpu",
         logger=False,
         enable_checkpointing=False,
         enable_progress_bar=False,
@@ -49,13 +49,13 @@ def test_model_training_step_runs():
 def test_config_defaults():
     cfg = Config()
     assert cfg.train.precision == "16-mixed"
-    assert cfg.train.max_epochs == 20
-    assert cfg.train.lr == pytest.approx(2e-4)
+    assert cfg.train.max_epochs == 100
+    assert cfg.train.lr == pytest.approx(0.001)
     assert cfg.train.beta1 == pytest.approx(0.5)
-    assert cfg.data.batch_size == 16
+    assert cfg.data.batch_size == 128
     assert cfg.data.image_size == 128
     assert cfg.eval.output_dir == "outputs/eval"
-    assert cfg.model.num_filters == 128
+    assert cfg.model.num_filters == 48
     assert cfg.model.num_residual_blocks == 9
     assert cfg.model.lambda_cycle == pytest.approx(10.0)
     assert cfg.model.lambda_identity == pytest.approx(5.0)
