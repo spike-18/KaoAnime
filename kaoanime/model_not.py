@@ -91,7 +91,7 @@ class NOTModel(pl.LightningModule):
         if n_fid > 0 and self._fid_images_seen < fid_limit:
             take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
             with torch.no_grad():
-                real_f = real_a[:take].float().add(1).div(2).clamp(0, 1)
+                real_f = real_b[:take].float().add(1).div(2).clamp(0, 1)
                 fake_f = T_X[:take].float().add(1).div(2).clamp(0, 1)
             self.fid.update(real_f, real=True)
             self.fid.update(fake_f, real=False)
