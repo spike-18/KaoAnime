@@ -1,4 +1,5 @@
 # kaoanime/utils/dataset.py
+import csv
 from pathlib import Path
 from typing import Callable
 
@@ -11,6 +12,19 @@ from .image import load_image
 from .transforms import get_transforms
 
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+
+
+def _load_female_ids(csv_path: Path) -> set[str]:
+    """Return CelebA image_ids whose 'Male' attribute is -1 (female)."""
+    with open(csv_path, newline="") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames is None or "Male" not in reader.fieldnames:
+            raise ValueError(
+                f"{csv_path} has no 'Male' column; columns={reader.fieldnames}"
+            )
+        id_field = reader.fieldnames[0]
+        return {row[id_field] for row in reader if row["Male"] == "-1"}
+
 
 # One AlignFaceProcessor per DataLoader worker process, created on first use.
 # Stored at module level so it survives across __getitem__ calls within a worker.

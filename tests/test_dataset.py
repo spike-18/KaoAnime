@@ -100,3 +100,37 @@ def test_anime_crop_works_on_non_square_input():
     img = PILImage.new("RGB", (800, 600))
     result = _anime_crop(img, offset_x=0, offset_y=-7)
     assert result.size == (256, 256)
+
+
+import csv
+import pytest
+from kaoanime.utils.dataset import _load_female_ids
+
+
+def _write_csv(path: Path, header: list[str], rows: list[list[str]]) -> None:
+    with open(path, "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(header)
+        w.writerows(rows)
+
+
+def test_load_female_ids_selects_only_male_minus_one(tmp_path):
+    csv_path = tmp_path / "list_attr_celeba.csv"
+    # 'Male' is NOT the first attribute column — proves we key by header name.
+    _write_csv(
+        csv_path,
+        ["image_id", "Attractive", "Male", "Young"],
+        [
+            ["000001.jpg", "1", "-1", "1"],   # female -> kept
+            ["000002.jpg", "-1", "1", "1"],   # male   -> excluded
+            ["000003.jpg", "1", "-1", "-1"],  # female -> kept
+        ],
+    )
+    assert _load_female_ids(csv_path) == {"000001.jpg", "000003.jpg"}
+
+
+def test_load_female_ids_raises_without_male_column(tmp_path):
+    csv_path = tmp_path / "list_attr_celeba.csv"
+    _write_csv(csv_path, ["image_id", "Young"], [["000001.jpg", "1"]])
+    with pytest.raises(ValueError, match="Male"):
+        _load_female_ids(csv_path)
