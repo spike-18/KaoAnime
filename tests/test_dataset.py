@@ -221,3 +221,10 @@ def test_dataset_raises_when_attr_csv_missing(tmp_path):
     PILImage.new("RGB", (64, 64)).save(b_dir / "0.jpg")
     with pytest.raises(FileNotFoundError, match="list_attr_celeba.csv"):
         UnpairedImageDataset(a_dir, b_dir, image_size=64, train=False)
+
+
+def test_dataset_raises_when_no_female_match(tmp_path):
+    # CSV present but every id is male -> filter yields zero -> must fail loud
+    a_dir, b_dir = _make_celeba(tmp_path, ["m0.jpg", "m1.jpg"], b_count=2, female=set())
+    with pytest.raises(ValueError, match="matched 0"):
+        UnpairedImageDataset(a_dir, b_dir, image_size=64, train=False)

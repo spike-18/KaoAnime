@@ -47,6 +47,7 @@ def _get_worker_processor():
     global _worker_processor
     if _worker_processor is None:
         from .align import AlignFaceProcessor
+
         _worker_processor = AlignFaceProcessor()
     return _worker_processor
 
@@ -75,7 +76,9 @@ def _anime_crop(img: Image.Image, offset_x: int = 0, offset_y: int = -7) -> Imag
 def _collect_files(roots: list[str | Path]) -> list[Path]:
     files: list[Path] = []
     for r in roots:
-        files.extend(p for p in Path(r).iterdir() if p.suffix.lower() in _IMAGE_EXTENSIONS)
+        files.extend(
+            p for p in Path(r).iterdir() if p.suffix.lower() in _IMAGE_EXTENSIONS
+        )
     return sorted(files)
 
 
@@ -102,6 +105,12 @@ class UnpairedImageDataset(Dataset):
             )
         female_ids = _load_female_ids(attr_csv)
         root_a_files = [p for p in _collect_files([root_a]) if p.name in female_ids]
+        if not root_a_files:
+            raise ValueError(
+                f"Women-only filter matched 0 of the files in "
+                f"root_a={root_a!r} against {attr_csv} (Male == -1). Check the "
+                f"CSV format and that root_a contains CelebA image ids."
+            )
         extra_a_files = _collect_files(list(extra_roots_a or []))
         self._files_a = sorted(root_a_files + extra_a_files)
         self._files_b = _collect_files([root_b] + list(extra_roots_b or []))
