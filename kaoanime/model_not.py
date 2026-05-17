@@ -120,7 +120,10 @@ class NOTModel(pl.LightningModule):
             score = self.fid.compute()
             if isinstance(self.logger, MLFlowLogger):
                 self.logger.experiment.log_metric(
-                    self.logger.run_id, "val/fid", score.item(), step=self._train_step
+                    self.logger.run_id,
+                    "val/fid",
+                    score.item(),
+                    step=self.trainer.global_step,
                 )
             self.fid.reset()
             self._fid_images_seen = 0
@@ -140,7 +143,9 @@ class NOTModel(pl.LightningModule):
                     run_id, _tensor_to_image(log_a[0]), "images/input.png"
                 )
             self.logger.experiment.log_image(
-                run_id, _tensor_to_image(log_tb[0]), f"images/{self._train_step:06d}_output.png"
+                run_id,
+                _tensor_to_image(log_tb[0]),
+                f"images/{self.trainer.global_step:06d}_output.png",
             )
 
     def configure_optimizers(self):
