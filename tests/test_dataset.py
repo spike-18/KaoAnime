@@ -5,7 +5,12 @@ from pathlib import Path
 import pytest
 from PIL import Image as PILImage
 
-from kaoanime.utils.dataset import UnpairedImageDataset, _anime_crop, _load_female_ids
+from kaoanime.utils.dataset import (
+    UnpairedImageDataset,
+    _anime_crop,
+    _find_celeba_attr_csv,
+    _load_female_ids,
+)
 
 
 def _make_images(directory: Path, count: int) -> None:
@@ -133,3 +138,26 @@ def test_load_female_ids_raises_without_male_column(tmp_path):
     _write_csv(csv_path, ["image_id", "Young"], [["000001.jpg", "1"]])
     with pytest.raises(ValueError, match="Male"):
         _load_female_ids(csv_path)
+
+
+def test_find_attr_csv_walks_up_parents(tmp_path):
+    # root_a is two levels below where the CSV lives — mirrors the real
+    # layout: .../CelebA/list_attr_celeba.csv vs .../CelebA/img/img.
+    (tmp_path / "list_attr_celeba.csv").write_text("image_id,Male\n")
+    root_a = tmp_path / "img_align_celeba" / "img_align_celeba"
+    root_a.mkdir(parents=True)
+    found = _find_celeba_attr_csv(root_a)
+    assert found == tmp_path / "list_attr_celeba.csv"
+
+
+def test_find_attr_csv_returns_none_when_absent(tmp_path):
+    root_a = tmp_path / "A"
+    root_a.mkdir()
+    assert _find_celeba_attr_csv(root_a) is None
+
+
+def test_find_attr_csv_accepts_string_path(tmp_path):
+    (tmp_path / "list_attr_celeba.csv").write_text("image_id,Male\n")
+    root_a = tmp_path / "A"
+    root_a.mkdir()
+    assert _find_celeba_attr_csv(str(root_a)) == tmp_path / "list_attr_celeba.csv"

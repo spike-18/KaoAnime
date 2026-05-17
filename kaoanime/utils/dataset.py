@@ -12,6 +12,8 @@ from .image import load_image
 from .transforms import get_transforms
 
 _IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+_ATTR_CSV_NAME = "list_attr_celeba.csv"
+_ATTR_CSV_SEARCH_DEPTH = 5
 
 
 def _load_female_ids(csv_path: Path) -> set[str]:
@@ -24,6 +26,16 @@ def _load_female_ids(csv_path: Path) -> set[str]:
             )
         id_field = reader.fieldnames[0]
         return {row[id_field] for row in reader if row["Male"] == "-1"}
+
+
+def _find_celeba_attr_csv(root_a: str | Path) -> Path | None:
+    """Search root_a and up to _ATTR_CSV_SEARCH_DEPTH parents for the CSV."""
+    start = Path(root_a)
+    for d in [start, *list(start.parents)[:_ATTR_CSV_SEARCH_DEPTH]]:
+        candidate = d / _ATTR_CSV_NAME
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 # One AlignFaceProcessor per DataLoader worker process, created on first use.
