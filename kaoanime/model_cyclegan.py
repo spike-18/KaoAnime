@@ -11,7 +11,7 @@ from torchmetrics.image.fid import FrechetInceptionDistance
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
 from kaoanime.models import PatchDiscriminator, ResNetDiscriminator, ResNetGenerator, UNetGenerator
-from kaoanime.utils import ImagePool
+from kaoanime.utils import ImagePool, fid_should_accumulate, fid_should_compute
 
 
 def _make_generator(cfg: Config) -> torch.nn.Module:
@@ -114,11 +114,21 @@ class KaoAnimeModel(pl.LightningModule):
             on_epoch=True,
         )
 
-        # --- FID accumulation (every step, until fid_num_images collected) ---
+        # --- FID: accumulate in the window ENDING at each compute boundary
+        # so the score reflects the current generator, not a stale one. ---
         n_fid = self.cfg.train.fid_every_n_steps
         fid_limit = self.cfg.train.fid_num_images
-        if n_fid > 0 and self._fid_images_seen < fid_limit:
-            take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
+        bs = real_a.shape[0]
+        num_batches = max(1, -(-fid_limit // bs))  # ceil(fid_limit / bs)
+
+        self._train_step += 1
+        step = self._train_step
+
+        if (
+            fid_should_accumulate(step, n_fid, num_batches)
+            and self._fid_images_seen < fid_limit
+        ):
+            take = min(bs, fid_limit - self._fid_images_seen)
             with torch.no_grad():
                 real_f = real_b[:take].float().add(1).div(2).clamp(0, 1)
                 fake_f = fake_b[:take].detach().float().add(1).div(2).clamp(0, 1)
@@ -126,10 +136,7 @@ class KaoAnimeModel(pl.LightningModule):
             self.fid.update(fake_f, real=False)
             self._fid_images_seen += take
 
-        self._train_step += 1
-
-        # --- FID computation (every fid_every_n_steps steps) ---
-        if n_fid > 0 and self._train_step % n_fid == 0 and self._fid_images_seen > 0:
+        if fid_should_compute(step, n_fid) and self._fid_images_seen > 0:
             score = self.fid.compute()
             if isinstance(self.logger, MLFlowLogger):
                 self.logger.experiment.log_metric(

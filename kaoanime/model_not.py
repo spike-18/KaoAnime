@@ -11,6 +11,7 @@ from torchmetrics.image.fid import FrechetInceptionDistance
 
 from kaoanime.config import Config
 from kaoanime.models import NOTPotential, UNetGenerator
+from kaoanime.utils import fid_should_accumulate, fid_should_compute
 
 
 def _tensor_to_image(t: torch.Tensor) -> np.ndarray:
@@ -93,11 +94,21 @@ class NOTModel(pl.LightningModule):
             on_epoch=True,
         )
 
-        # --- FID accumulation ---
+        # --- FID: accumulate in the window ENDING at each compute boundary
+        # so the score reflects the current generator, not a stale one. ---
         n_fid = self.cfg.not_.fid_every_n_steps
         fid_limit = self.cfg.not_.fid_num_images
-        if n_fid > 0 and self._fid_images_seen < fid_limit:
-            take = min(real_a.shape[0], fid_limit - self._fid_images_seen)
+        bs = real_a.shape[0]
+        num_batches = max(1, -(-fid_limit // bs))  # ceil(fid_limit / bs)
+
+        self._train_step += 1
+        step = self._train_step
+
+        if (
+            fid_should_accumulate(step, n_fid, num_batches)
+            and self._fid_images_seen < fid_limit
+        ):
+            take = min(bs, fid_limit - self._fid_images_seen)
             with torch.no_grad():
                 real_f = real_b[:take].float().add(1).div(2).clamp(0, 1)
                 fake_f = T_X[:take].float().add(1).div(2).clamp(0, 1)
@@ -105,9 +116,7 @@ class NOTModel(pl.LightningModule):
             self.fid.update(fake_f, real=False)
             self._fid_images_seen += take
 
-        self._train_step += 1
-
-        if n_fid > 0 and self._train_step % n_fid == 0 and self._fid_images_seen > 0:
+        if fid_should_compute(step, n_fid) and self._fid_images_seen > 0:
             score = self.fid.compute()
             if isinstance(self.logger, MLFlowLogger):
                 self.logger.experiment.log_metric(

@@ -1,6 +1,7 @@
 from .align import align_face
 from .dataloader import create_dataloader
 from .dataset import UnpairedImageDataset
+from .fid_schedule import fid_should_accumulate, fid_should_compute
 from .image import load_image, save_image
 from .image_pool import ImagePool
 from .transforms import get_transforms
@@ -13,4 +14,6 @@ __all__ = [
     "ImagePool",
     "UnpairedImageDataset",
     "create_dataloader",
+    "fid_should_accumulate",
+    "fid_should_compute",
 ]
