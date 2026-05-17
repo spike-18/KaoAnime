@@ -40,10 +40,10 @@ def test_generator_loss_is_scalar():
         t["fake_b"],
         t["rec_a"],
         t["rec_b"],
-        t["idt_a"],
-        t["idt_b"],
         t["disc_fake_a"],
         t["disc_fake_b"],
+        t["idt_a"],
+        t["idt_b"],
     )
     assert result.ndim == 0, f"Expected 0-dim scalar, got shape {result.shape}"
 
@@ -123,10 +123,10 @@ def test_perfect_identity_gives_zero_identity_loss():
         real_b,
         real_a,
         real_b,
+        disc,
+        disc,
         real_a.clone(),
         real_b.clone(),
-        disc,
-        disc,
     )
     loss_fn_no_idt = CycleGANLoss(lambda_cycle=0.0, lambda_identity=0.0)
     loss_no_idt = loss_fn_no_idt.generator(
@@ -136,10 +136,10 @@ def test_perfect_identity_gives_zero_identity_loss():
         real_b,
         real_a,
         real_b,
+        disc,
+        disc,
         real_a.clone(),
         real_b.clone(),
-        disc,
-        disc,
     )
     assert loss_with_idt.item() == pytest.approx(loss_no_idt.item(), abs=1e-5)
 

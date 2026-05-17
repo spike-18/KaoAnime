@@ -17,7 +17,7 @@ class CycleGANLoss(nn.Module):
         super().__init__()
         self.lambda_cycle = lambda_cycle
         self.lambda_identity = lambda_identity
-        self.gan = nn.BCEWithLogitsLoss()
+        self.gan = nn.MSELoss()
         self.cycle = nn.L1Loss()
         self.identity = nn.L1Loss()
 
