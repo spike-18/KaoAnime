@@ -17,6 +17,12 @@ def _make_images(directory: Path, count: int) -> None:
     directory.mkdir(parents=True)
     for i in range(count):
         PILImage.new("RGB", (64, 64), color=(i * 10, 0, 0)).save(directory / f"{i}.jpg")
+    if directory.name == "A":
+        _write_csv(
+            directory.parent / "list_attr_celeba.csv",
+            ["image_id", "Male"],
+            [[f"{i}.jpg", "-1"] for i in range(count)],
+        )
 
 
 def test_len_is_max_of_both_domains(tmp_path):
@@ -161,3 +167,57 @@ def test_find_attr_csv_accepts_string_path(tmp_path):
     root_a = tmp_path / "A"
     root_a.mkdir()
     assert _find_celeba_attr_csv(str(root_a)) == tmp_path / "list_attr_celeba.csv"
+
+
+def _make_celeba(
+    tmp_path: Path, a_ids: list[str], b_count: int, female: set[str] | None = None
+) -> tuple[Path, Path]:
+    """Create A/ with a_ids, B/ with b_count images, and an attribute CSV
+    at tmp_path. Every id in `female` (default: all a_ids) gets Male=-1."""
+    female = set(a_ids) if female is None else female
+    a_dir = tmp_path / "A"
+    a_dir.mkdir()
+    for name in a_ids:
+        PILImage.new("RGB", (64, 64)).save(a_dir / name)
+    b_dir = tmp_path / "B"
+    b_dir.mkdir()
+    for i in range(b_count):
+        PILImage.new("RGB", (64, 64)).save(b_dir / f"{i}.jpg")
+    rows = [[n, "-1" if n in female else "1"] for n in a_ids]
+    _write_csv(tmp_path / "list_attr_celeba.csv", ["image_id", "Male"], rows)
+    return a_dir, b_dir
+
+
+def test_dataset_keeps_only_female_root_a(tmp_path):
+    a_dir, b_dir = _make_celeba(
+        tmp_path,
+        ["f0.jpg", "m0.jpg", "f1.jpg"],
+        b_count=2,
+        female={"f0.jpg", "f1.jpg"},
+    )
+    ds = UnpairedImageDataset(a_dir, b_dir, image_size=64, train=False)
+    names = sorted(p.name for p in ds._files_a)
+    assert names == ["f0.jpg", "f1.jpg"]
+
+
+def test_dataset_does_not_filter_extra_roots_a(tmp_path):
+    a_dir, b_dir = _make_celeba(tmp_path, ["f0.jpg"], b_count=1, female={"f0.jpg"})
+    extra = tmp_path / "ffhq"
+    extra.mkdir()
+    PILImage.new("RGB", (64, 64)).save(extra / "ffhq0.jpg")  # not in CSV
+    ds = UnpairedImageDataset(
+        a_dir, b_dir, image_size=64, train=False, extra_roots_a=[extra]
+    )
+    names = sorted(p.name for p in ds._files_a)
+    assert names == ["f0.jpg", "ffhq0.jpg"]
+
+
+def test_dataset_raises_when_attr_csv_missing(tmp_path):
+    a_dir = tmp_path / "A"
+    a_dir.mkdir()
+    PILImage.new("RGB", (64, 64)).save(a_dir / "0.jpg")
+    b_dir = tmp_path / "B"
+    b_dir.mkdir()
+    PILImage.new("RGB", (64, 64)).save(b_dir / "0.jpg")
+    with pytest.raises(FileNotFoundError, match="list_attr_celeba.csv"):
+        UnpairedImageDataset(a_dir, b_dir, image_size=64, train=False)

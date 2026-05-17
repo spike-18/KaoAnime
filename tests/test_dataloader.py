@@ -1,4 +1,5 @@
 from pathlib import Path
+import csv
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, TensorDataset
@@ -10,6 +11,11 @@ def _make_images(directory: Path, count: int) -> None:
     directory.mkdir(parents=True)
     for i in range(count):
         Image.new("RGB", (64, 64)).save(directory / f"{i}.jpg")
+    if directory.name == "A":
+        with open(directory.parent / "list_attr_celeba.csv", "w", newline="") as fh:
+            w = csv.writer(fh)
+            w.writerow(["image_id", "Male"])
+            w.writerows([[f"{i}.jpg", "-1"] for i in range(count)])
 
 
 def test_create_dataloader_returns_dataloader():

@@ -92,7 +92,18 @@ class UnpairedImageDataset(Dataset):
         anime_offset_x: int = 0,
         anime_offset_y: int = -7,
     ) -> None:
-        self._files_a = _collect_files([root_a] + list(extra_roots_a or []))
+        attr_csv = _find_celeba_attr_csv(root_a)
+        if attr_csv is None:
+            raise FileNotFoundError(
+                f"{_ATTR_CSV_NAME} not found within {_ATTR_CSV_SEARCH_DEPTH} "
+                f"parent levels of root_a={root_a!r}. Women-only filtering is "
+                f"mandatory; see docs/superpowers/specs/"
+                f"2026-05-17-women-only-celeba-design.md."
+            )
+        female_ids = _load_female_ids(attr_csv)
+        root_a_files = [p for p in _collect_files([root_a]) if p.name in female_ids]
+        extra_a_files = _collect_files(list(extra_roots_a or []))
+        self._files_a = sorted(root_a_files + extra_a_files)
         self._files_b = _collect_files([root_b] + list(extra_roots_b or []))
         self._transform = self._create_transform(image_size, train)
         self._image_size = image_size
