@@ -1,7 +1,11 @@
 # tests/test_dataset.py
+import csv
 from pathlib import Path
+
+import pytest
 from PIL import Image as PILImage
-from kaoanime.utils.dataset import UnpairedImageDataset, _anime_crop
+
+from kaoanime.utils.dataset import UnpairedImageDataset, _anime_crop, _load_female_ids
 
 
 def _make_images(directory: Path, count: int) -> None:
@@ -102,11 +106,6 @@ def test_anime_crop_works_on_non_square_input():
     assert result.size == (256, 256)
 
 
-import csv
-import pytest
-from kaoanime.utils.dataset import _load_female_ids
-
-
 def _write_csv(path: Path, header: list[str], rows: list[list[str]]) -> None:
     with open(path, "w", newline="") as fh:
         w = csv.writer(fh)
@@ -121,8 +120,8 @@ def test_load_female_ids_selects_only_male_minus_one(tmp_path):
         csv_path,
         ["image_id", "Attractive", "Male", "Young"],
         [
-            ["000001.jpg", "1", "-1", "1"],   # female -> kept
-            ["000002.jpg", "-1", "1", "1"],   # male   -> excluded
+            ["000001.jpg", "1", "-1", "1"],  # female -> kept
+            ["000002.jpg", "-1", "1", "1"],  # male   -> excluded
             ["000003.jpg", "1", "-1", "-1"],  # female -> kept
         ],
     )
