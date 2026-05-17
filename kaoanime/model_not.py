@@ -82,6 +82,9 @@ class NOTModel(pl.LightningModule):
 
         f_on_fake = self.f(T_X).mean()
         f_on_real = self.f(real_b).mean()
+        # NOT trains as a single max_steps run (max_epochs=-1); on_epoch
+        # aggregation never fires and only adds Lightning's _step/_epoch
+        # name suffixes, so log on_step only.
         self.log_dict(
             {
                 "train/t_loss": t_loss,
@@ -91,7 +94,7 @@ class NOTModel(pl.LightningModule):
                 "train/mse": F.mse_loss(real_a, T_X.detach()),
             },
             on_step=True,
-            on_epoch=True,
+            on_epoch=False,
         )
 
         # --- FID: accumulate in the window ENDING at each compute boundary

@@ -56,6 +56,7 @@ def test_fid_logged_on_global_step_axis(tmp_path):
         max_epochs=-1,
         accelerator="cpu",
         precision="32-true",
+        log_every_n_steps=1,
         logger=logger,
         enable_checkpointing=False,
         enable_progress_bar=False,
@@ -70,3 +71,38 @@ def test_fid_logged_on_global_step_axis(tmp_path):
         f"FID should be logged on the global_step axis [9, 18]; got {steps}. "
         "If this is [3, 6] the per-batch counter is still being used."
     )
+
+
+def test_loss_metric_names_have_no_step_suffix(tmp_path):
+    """NOT runs as one infinite epoch (max_steps), so on_epoch aggregation
+    never fires and only adds Lightning's `_step`/`_epoch` suffixes. Metrics
+    must be logged as `train/t_loss`, not `train/t_loss_step`."""
+    cfg = _tiny_cfg()
+    model = NOTModel(cfg)
+    model.fid.update = MagicMock()
+    model.fid.reset = MagicMock()
+    model.fid.compute = MagicMock(return_value=torch.tensor(0.5))
+
+    logger = MLFlowLogger(
+        experiment_name="not-test", tracking_uri=f"file:{tmp_path}/mlruns"
+    )
+    loader = DataLoader(_PairedDataset(), batch_size=2, num_workers=0)
+    trainer = Trainer(
+        max_steps=(cfg.not_.t_iters + 1) * 6,
+        max_epochs=-1,
+        accelerator="cpu",
+        precision="32-true",
+        log_every_n_steps=1,
+        logger=logger,
+        enable_checkpointing=False,
+        enable_progress_bar=False,
+    )
+    trainer.fit(model, train_dataloaders=loader)
+
+    client = MlflowClient(tracking_uri=f"file:{tmp_path}/mlruns")
+    keys = set(client.get_run(logger.run_id).data.metrics)
+
+    assert "train/t_loss" in keys, keys
+    assert "train/f_loss" in keys, keys
+    suffixed = {k for k in keys if k.endswith(("_step", "_epoch"))}
+    assert not suffixed, f"Unexpected suffixed metrics (dead on_epoch): {suffixed}"
