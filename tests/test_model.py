@@ -61,6 +61,16 @@ def test_config_defaults():
     assert cfg.model.lambda_identity == pytest.approx(5.0)
 
 
+def test_not_config_defaults():
+    cfg = Config()
+    assert cfg.not_.t_iters == 10, (
+        "NOT requires a 10:1 T:f update ratio (Korotin et al. reference); "
+        f"got t_iters={cfg.not_.t_iters}"
+    )
+    assert cfg.not_.t_lr == pytest.approx(1e-4)
+    assert cfg.not_.f_lr == pytest.approx(1e-4)
+
+
 def test_last_checkpoint_is_saved(tmp_path):
     ckpt_cb = ModelCheckpoint(
         dirpath=tmp_path,
