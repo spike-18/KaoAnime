@@ -18,3 +18,7 @@ class NOTConfig:
     fid_num_images: int = 512
     resume_from_checkpoint: str = ""
     t_grad_clip: float = 100.0
+    beta1: float = 0.9               # Adam beta1 (Korotin reference default)
+    beta2: float = 0.999             # Adam beta2 (Korotin reference default)
+    lr_step_size: int = 75000        # StepLR decay interval in training steps
+    lr_gamma: float = 0.5            # StepLR multiplicative decay factor

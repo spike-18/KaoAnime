@@ -93,6 +93,7 @@ class NOTModel(pl.LightningModule):
                 "train/f_on_fake": f_on_fake,
                 "train/f_on_real": f_on_real,
                 "train/mse": F.mse_loss(real_a, T_X.detach()),
+                "train/lr": opt_t.param_groups[0]["lr"],
             },
             on_step=True,
             on_epoch=False,
@@ -152,11 +153,21 @@ class NOTModel(pl.LightningModule):
                 f"images/{self.trainer.global_step:06d}_output.png",
             )
 
+        self._sch_t.step()
+        self._sch_f.step()
+
     def configure_optimizers(self):
+        betas = (self.cfg.not_.beta1, self.cfg.not_.beta2)
         opt_t = torch.optim.Adam(
-            self.T.parameters(), lr=self.cfg.not_.t_lr, weight_decay=1e-10, betas=(0.5, 0.97)
+            self.T.parameters(), lr=self.cfg.not_.t_lr, weight_decay=1e-10, betas=betas
         )
         opt_f = torch.optim.Adam(
-            self.f.parameters(), lr=self.cfg.not_.f_lr, weight_decay=1e-10, betas=(0.5, 0.97)
+            self.f.parameters(), lr=self.cfg.not_.f_lr, weight_decay=1e-10, betas=betas
+        )
+        self._sch_t = torch.optim.lr_scheduler.StepLR(
+            opt_t, step_size=self.cfg.not_.lr_step_size, gamma=self.cfg.not_.lr_gamma
+        )
+        self._sch_f = torch.optim.lr_scheduler.StepLR(
+            opt_f, step_size=self.cfg.not_.lr_step_size, gamma=self.cfg.not_.lr_gamma
         )
         return [opt_t, opt_f]
