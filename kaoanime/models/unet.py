@@ -13,10 +13,10 @@ class _DoubleConv(nn.Module):
         mid_ch = mid_ch or out_ch
         self.net = nn.Sequential(
             nn.Conv2d(in_ch, mid_ch, 3, padding=1, bias=False),
-            nn.InstanceNorm2d(mid_ch),
+            nn.BatchNorm2d(mid_ch),
             nn.ReLU(inplace=True),
             nn.Conv2d(mid_ch, out_ch, 3, padding=1, bias=False),
-            nn.InstanceNorm2d(out_ch),
+            nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True),
         )
 
