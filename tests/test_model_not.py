@@ -1,5 +1,5 @@
 import dataclasses
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import torch
 from lightning import Trainer
@@ -106,3 +106,41 @@ def test_loss_metric_names_have_no_step_suffix(tmp_path):
     assert "train/f_loss" in keys, keys
     suffixed = {k for k in keys if k.endswith(("_step", "_epoch"))}
     assert not suffixed, f"Unexpected suffixed metrics (dead on_epoch): {suffixed}"
+
+
+def test_not_config_has_t_grad_clip():
+    cfg = Config()
+    assert hasattr(cfg.not_, "t_grad_clip"), "NOTConfig must have t_grad_clip field"
+    assert cfg.not_.t_grad_clip == 100.0
+
+
+def test_grad_clip_called_in_t_loop(tmp_path):
+    """clip_grad_norm_ must be called exactly t_iters times per training_step."""
+    cfg = _tiny_cfg()  # t_iters=2
+    model = NOTModel(cfg)
+    model.fid.update = MagicMock()
+    model.fid.reset = MagicMock()
+    model.fid.compute = MagicMock(return_value=torch.tensor(0.5))
+
+    loader = DataLoader(_PairedDataset(), batch_size=2, num_workers=0)
+
+    with patch("torch.nn.utils.clip_grad_norm_") as mock_clip:
+        trainer = Trainer(
+            max_steps=cfg.not_.t_iters + 1,  # (t_iters + 1) Lightning steps = 1 training_step
+            max_epochs=-1,
+            accelerator="cpu",
+            precision="32-true",
+            log_every_n_steps=1,
+            enable_checkpointing=False,
+            enable_progress_bar=False,
+        )
+        trainer.fit(model, train_dataloaders=loader)
+
+    assert mock_clip.call_count == cfg.not_.t_iters, (
+        f"Expected clip_grad_norm_ called {cfg.not_.t_iters} times "
+        f"(once per T inner iter), got {mock_clip.call_count}"
+    )
+    clip_value = mock_clip.call_args_list[0].args[1]
+    assert clip_value == cfg.not_.t_grad_clip, (
+        f"Expected clip value {cfg.not_.t_grad_clip}, got {clip_value}"
+    )

@@ -65,6 +65,7 @@ class NOTModel(pl.LightningModule):
             t_loss = F.mse_loss(real_a, T_X) - self.f(T_X).mean()
             opt_t.zero_grad()
             self.manual_backward(t_loss)
+            torch.nn.utils.clip_grad_norm_(self.T.parameters(), self.cfg.not_.t_grad_clip)
             opt_t.step()
         self.untoggle_optimizer(opt_t)
         # T_X from last inner step — used for FID below
@@ -153,9 +154,9 @@ class NOTModel(pl.LightningModule):
 
     def configure_optimizers(self):
         opt_t = torch.optim.Adam(
-            self.T.parameters(), lr=self.cfg.not_.t_lr, weight_decay=1e-10
+            self.T.parameters(), lr=self.cfg.not_.t_lr, weight_decay=1e-10, betas=(0.5, 0.97)
         )
         opt_f = torch.optim.Adam(
-            self.f.parameters(), lr=self.cfg.not_.f_lr, weight_decay=1e-10
+            self.f.parameters(), lr=self.cfg.not_.f_lr, weight_decay=1e-10, betas=(0.5, 0.97)
         )
         return [opt_t, opt_f]
