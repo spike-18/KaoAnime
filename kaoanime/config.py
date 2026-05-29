@@ -9,15 +9,15 @@ from kaoanime.config_not import NOTConfig
 
 @dataclass
 class DataConfig:
-    root_a: str = "/beta/home/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
-    root_b: str = "/beta/home/madorskii/datasets/alignedanimefaces/safebooru_jpeg"
-    test_a: str = "/beta/home/madorskii/datasets/CelebA/test"
-    test_b: str = "/beta/home/madorskii/datasets/alignedanimefaces/test"
+    root_a: str = "/beta/students/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
+    root_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/safebooru_jpeg"
+    test_a: str = "/beta/students/madorskii/datasets/CelebA/test"
+    test_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/test"
     extra_roots_a: list[str] = field(default_factory=list)
     extra_roots_b: list[str] = field(default_factory=list)
     batch_size: int = 64
     image_size: int = 128
-    num_workers: int = 8
+    num_workers: int = 12
     pin_memory: bool = True
     align_a: bool = False
     # Fixed crop transform for domain B (anime). Pixel offsets from center (256, 256).
@@ -36,7 +36,7 @@ class EvalConfig:
 
 @dataclass
 class Config:
-    model_type: str = "cyclegan"   # "cyclegan" or "not"
+    model_type: str = "not"   # "cyclegan" or "not"
     data: DataConfig = field(default_factory=DataConfig)
     eval: EvalConfig = field(default_factory=EvalConfig)
     # CycleGAN-specific (ignored when model_type="not")

@@ -113,7 +113,8 @@ class AlignFaceProcessor:
         return cv2.warpAffine(
             image, M, (size, size),
             flags=cv2.INTER_LINEAR,
-            borderMode=cv2.BORDER_REFLECT_101,
+            borderMode=cv2.BORDER_REPLICATE,
+            # borderValue=(255, 255, 255)
         )
 
     def close(self) -> None:
