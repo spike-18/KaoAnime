@@ -9,7 +9,9 @@ class NOTConfig:
     )
     t_lr: float = 1e-4  # transport map (UNet) learning rate
     f_lr: float = 1e-4  # potential (NOTPotential) learning rate
-    t_filters: int = 48  # UNet num_filters (matches trained checkpoints; reference base_factor=48)
+    t_filters: int = (
+        48  # UNet num_filters (matches trained checkpoints; reference base_factor=48)
+    )
     f_filters: int = 64  # NOTPotential num_filters
     max_steps: int = 150001
     precision: str = "bf16-mixed"
