@@ -10,7 +10,7 @@ class CycleGANTrainConfig:
     alpha: float = 0.993
     precision: str = "16-mixed"
     log_every_n_steps: int = 50
-    mlflow_tracking_uri: str = "http://10.0.111.233:9999"
+    mlflow_tracking_uri: str = "http://127.0.0.1:8080"
     gen_steps: int = 1
     disc_steps: int = 5
     log_image_every_n_steps: int = 5000
@@ -22,9 +22,9 @@ class CycleGANTrainConfig:
 
 @dataclass
 class CycleGANConfig:
-    num_filters: int = 48          # matches NOT t_filters default
+    num_filters: int = 48  # matches NOT t_filters default
     num_residual_blocks: int = 9
-    generator: str = "unet"        # "resnet" or "unet"
+    generator: str = "unet"  # "resnet" or "unet"
     discriminator: str = "resnet"  # "patch" or "resnet"
     lambda_cycle: float = 10.0
     lambda_identity: float = 5.0
