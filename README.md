@@ -116,6 +116,14 @@ uv run python infer.py \
 Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true` enables face alignment
 before translation.
 
+Lightweight, **torch-free** inference on an exported ONNX model (see Production
+preparation below):
+
+```bash
+uv run python scripts/infer_onnx.py --onnx models/export/model.onnx \
+    --input data/demo/testA --output-dir outputs/onnx
+```
+
 ### Overall — project structure
 
 ```
@@ -130,7 +138,7 @@ kaoanime-selfie2anime/
 │   ├── config*.py           # Hydra configs (shared + NOT + CycleGAN)
 │   ├── model_not.py         # NOT LightningModule
 │   └── model_cyclegan.py    # CycleGAN LightningModule
-├── scripts/                 # prepare_dataset, export_models, align_dataset
+├── scripts/                 # data prep, model export (onnx/tensorrt), onnx inference
 ├── notebooks/               # exploratory notebooks
 ├── tests/                   # pytest tests
 ├── train.py · infer.py · eval.py   # CLI entry points
@@ -138,8 +146,24 @@ kaoanime-selfie2anime/
 └── .pre-commit-config.yaml         # code-quality hooks
 ```
 
-### Inference & delivery
+### Production preparation
 
 A trained model is saved as a Lightning checkpoint (`.ckpt`) and logged to MLflow.
-The best checkpoints are published to the DVC `models` remote via
-`scripts/export_models.py`. ONNX/TensorRT export and an inference server are planned.
+For production, the transport map `T` is exported to **ONNX**:
+
+```bash
+uv run python scripts/export_onnx.py \
+    --checkpoint checkpoints/not_ep10.ckpt --out models/export/model.onnx
+```
+
+Optionally build a **TensorRT** FP16 engine on a machine with TensorRT installed:
+
+```bash
+bash scripts/export_tensorrt.sh models/export/model.onnx models/export/model.engine
+```
+
+**Delivery bundle:** `model.onnx` + `scripts/infer_onnx.py`. Alignment is optional
+and additionally needs `models/face_landmarker.task` + `kaoanime/utils/align.py`.
+Default runtime deps are `onnxruntime, numpy, pillow` (alignment adds
+`opencv-python, mediapipe`) — no torch/lightning. An inference server (Triton /
+MLflow Serving) is planned.
