@@ -25,6 +25,7 @@ wheels/
 /outputs/
 /mlruns/
 /mlartifacts/
+/models/
 # Stray local MLflow file-store experiment dir
 /2/
 
