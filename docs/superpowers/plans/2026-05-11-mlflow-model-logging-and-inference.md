@@ -12,20 +12,21 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
-| `train.py` | Add `ModelCheckpoint` callback; log `last.ckpt` to MLflow after fit |
-| `kaoanime/config.py` | Add `input: str` and `direction: str` to `EvalConfig` |
-| `kaoanime/inference/__init__.py` | New: `run_inference()` function |
-| `infer.py` | New: Hydra CLI entry point for inference |
-| `tests/test_inference.py` | New: tests for `run_inference` |
-| `tests/test_model.py` | Add checkpoint-save smoke test |
+| File                             | Change                                                              |
+| -------------------------------- | ------------------------------------------------------------------- |
+| `train.py`                       | Add `ModelCheckpoint` callback; log `last.ckpt` to MLflow after fit |
+| `kaoanime/config.py`             | Add `input: str` and `direction: str` to `EvalConfig`               |
+| `kaoanime/inference/__init__.py` | New: `run_inference()` function                                     |
+| `infer.py`                       | New: Hydra CLI entry point for inference                            |
+| `tests/test_inference.py`        | New: tests for `run_inference`                                      |
+| `tests/test_model.py`            | Add checkpoint-save smoke test                                      |
 
 ---
 
 ## Task 1: Save final checkpoint and log to MLflow
 
 **Files:**
+
 - Modify: `train.py`
 - Modify: `tests/test_model.py`
 
@@ -156,6 +157,7 @@ git commit -m "feat: save last checkpoint and log to MLflow artifact store after
 ## Task 2: Inference pipeline module
 
 **Files:**
+
 - Create: `kaoanime/inference/__init__.py`
 - Modify: `kaoanime/config.py`
 - Create: `tests/test_inference.py`
@@ -331,6 +333,7 @@ git commit -m "feat: add inference pipeline module and extend EvalConfig with in
 ## Task 3: Inference CLI entry point
 
 **Files:**
+
 - Create: `infer.py`
 
 - [ ] **Step 3.1: Create `infer.py`**
@@ -396,6 +399,7 @@ git commit -m "feat: add inference CLI (infer.py) — load checkpoint, translate
 After completing all tasks:
 
 **Translate a directory of selfies to anime:**
+
 ```bash
 uv run python infer.py \
   eval.checkpoint=outputs/checkpoints/last.ckpt \
@@ -404,6 +408,7 @@ uv run python infer.py \
 ```
 
 **Translate a single image:**
+
 ```bash
 uv run python infer.py \
   eval.checkpoint=outputs/checkpoints/last.ckpt \
@@ -412,6 +417,7 @@ uv run python infer.py \
 ```
 
 **Reverse direction (anime → selfie):**
+
 ```bash
 uv run python infer.py \
   eval.checkpoint=outputs/checkpoints/last.ckpt \

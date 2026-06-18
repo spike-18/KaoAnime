@@ -13,6 +13,7 @@
 ### Task 1: Package skeleton + pytest
 
 **Files:**
+
 - Create: `kaoanime/__init__.py`
 - Create: `kaoanime/utils/__init__.py`
 - Create: `tests/__init__.py`
@@ -74,6 +75,7 @@ git commit -m "chore: scaffold kaoanime package and add pytest"
 ### Task 2: `image.py` — load_image and save_image
 
 **Files:**
+
 - Create: `kaoanime/utils/image.py`
 - Create: `tests/test_image.py`
 
@@ -179,6 +181,7 @@ git commit -m "feat: add load_image and save_image utilities"
 ### Task 3: `transforms.py` — get_transforms
 
 **Files:**
+
 - Create: `kaoanime/utils/transforms.py`
 - Create: `tests/test_transforms.py`
 
@@ -282,6 +285,7 @@ git commit -m "feat: add get_transforms utility"
 ### Task 4: `dataset.py` — UnpairedImageDataset
 
 **Files:**
+
 - Create: `kaoanime/utils/dataset.py`
 - Create: `tests/test_dataset.py`
 
@@ -397,6 +401,7 @@ git commit -m "feat: add UnpairedImageDataset"
 ### Task 5: `dataloader.py` — create_dataloader
 
 **Files:**
+
 - Create: `kaoanime/utils/dataloader.py`
 - Create: `tests/test_dataloader.py`
 
@@ -498,6 +503,7 @@ git commit -m "feat: add create_dataloader utility"
 ### Task 6: `__init__.py` re-exports + full suite
 
 **Files:**
+
 - Modify: `kaoanime/utils/__init__.py`
 - Create: `tests/test_utils_exports.py`
 

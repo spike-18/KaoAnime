@@ -49,6 +49,7 @@ def test_does_not_log_when_logger_not_mlflow(tmp_path):
 
 def test_is_subclass_of_model_checkpoint():
     from lightning.pytorch.callbacks import ModelCheckpoint
+
     assert issubclass(MLflowCheckpointCallback, ModelCheckpoint)
 
 
@@ -63,7 +64,9 @@ def test_on_train_epoch_end_calls_super_and_logs(tmp_path):
     mock_trainer = MagicMock()
     mock_trainer.logger = mock_logger
 
-    with patch("lightning.pytorch.callbacks.ModelCheckpoint.on_train_epoch_end") as mock_super:
+    with patch(
+        "lightning.pytorch.callbacks.ModelCheckpoint.on_train_epoch_end"
+    ) as mock_super:
         cb.on_train_epoch_end(mock_trainer, MagicMock())
         mock_super.assert_called_once()
 
@@ -90,7 +93,9 @@ def test_on_train_end_calls_super_and_logs(tmp_path):
         cb.on_train_end(mock_trainer, MagicMock())
         mock_super.assert_called_once()
 
-    mock_logger.experiment.log_artifact.assert_called_once_with("run-end", str(ckpt_new))
+    mock_logger.experiment.log_artifact.assert_called_once_with(
+        "run-end", str(ckpt_new)
+    )
 
 
 def test_does_not_log_when_logger_is_none(tmp_path):

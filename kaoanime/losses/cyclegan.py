@@ -51,7 +51,9 @@ class CycleGANLoss(nn.Module):
         Returns:
             Scalar tensor with the total generator loss.
         """
-        loss_gan = self.gan(disc_fake_a, torch.ones_like(disc_fake_a)) + self.gan(disc_fake_b, torch.ones_like(disc_fake_b))
+        loss_gan = self.gan(disc_fake_a, torch.ones_like(disc_fake_a)) + self.gan(
+            disc_fake_b, torch.ones_like(disc_fake_b)
+        )
 
         loss_cycle = self.lambda_cycle * (
             self.cycle(rec_a, real_a) + self.cycle(rec_b, real_b)

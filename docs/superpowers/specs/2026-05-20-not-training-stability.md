@@ -76,11 +76,11 @@ while preventing the occasional large spikes that drive MSE drift.
 
 ## Files Changed
 
-| File | Change |
-|---|---|
+| File                      | Change                                                            |
+| ------------------------- | ----------------------------------------------------------------- |
 | `kaoanime/models/unet.py` | `_DoubleConv`: replace `InstanceNorm2d` → `BatchNorm2d` (2 lines) |
-| `kaoanime/config_not.py` | Add `t_grad_clip: float = 100.0` |
-| `kaoanime/model_not.py` | Add `clip_grad_norm_` call inside T inner loop |
+| `kaoanime/config_not.py`  | Add `t_grad_clip: float = 100.0`                                  |
+| `kaoanime/model_not.py`   | Add `clip_grad_norm_` call inside T inner loop                    |
 
 No other files change. The CycleGAN model (`kaoanime/models/cyclegan.py`) has its own separate
 UNet that is unaffected — the fix targets only `kaoanime/models/unet.py` which is used by

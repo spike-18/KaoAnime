@@ -2,6 +2,13 @@ import pytest
 import torch
 import torch.nn as nn
 
+from kaoanime.models import (
+    NOTPotential,
+    PatchDiscriminator,
+    ResNetDiscriminator,
+    ResNetGenerator,
+    UNetGenerator,
+)
 from kaoanime.models.weights_init import init_weights
 
 
@@ -64,15 +71,6 @@ def test_init_weights_applies_to_sequential():
     for layer in seq:
         std = layer.weight.data.std().item()
         assert 0.005 < std < 0.04
-
-
-from kaoanime.models import (
-    NOTPotential,
-    PatchDiscriminator,
-    ResNetDiscriminator,
-    ResNetGenerator,
-    UNetGenerator,
-)
 
 
 def _conv_weight_std(model: nn.Module) -> float:

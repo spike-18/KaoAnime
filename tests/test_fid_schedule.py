@@ -32,7 +32,9 @@ def test_compute_fires_exactly_on_boundary():
 
 def test_exactly_num_batches_accumulations_per_window():
     n_fid, num_batches = 1000, 4
-    hits = [s for s in range(1, n_fid + 1) if fid_should_accumulate(s, n_fid, num_batches)]
+    hits = [
+        s for s in range(1, n_fid + 1) if fid_should_accumulate(s, n_fid, num_batches)
+    ]
     assert hits == [997, 998, 999, 1000]
     assert len(hits) == num_batches
 

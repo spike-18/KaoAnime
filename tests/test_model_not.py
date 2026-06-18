@@ -126,7 +126,8 @@ def test_grad_clip_called_in_t_loop(tmp_path):
 
     with patch("torch.nn.utils.clip_grad_norm_") as mock_clip:
         trainer = Trainer(
-            max_steps=cfg.not_.t_iters + 1,  # (t_iters + 1) Lightning steps = 1 training_step
+            max_steps=cfg.not_.t_iters
+            + 1,  # (t_iters + 1) Lightning steps = 1 training_step
             max_epochs=-1,
             accelerator="cpu",
             precision="32-true",

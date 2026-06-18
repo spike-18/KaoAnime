@@ -48,16 +48,22 @@ def run_inference(
         generator = model.g_ab if hasattr(model, "g_ab") else model.T
     else:
         if not hasattr(model, "g_ba"):
-            raise ValueError("b2a direction is not supported for NOT model (unidirectional transport)")
+            raise ValueError(
+                "b2a direction is not supported for NOT model (unidirectional transport)"
+            )
         generator = model.g_ba
 
     if input_path.is_file():
         paths = [input_path]
     else:
-        paths = sorted(p for p in input_path.iterdir() if p.suffix.lower() in _IMAGE_EXTS)
+        paths = sorted(
+            p for p in input_path.iterdir() if p.suffix.lower() in _IMAGE_EXTS
+        )
 
     if not paths:
-        raise FileNotFoundError(f"No images found in {input_path!r} (supported: {_IMAGE_EXTS})")
+        raise FileNotFoundError(
+            f"No images found in {input_path!r} (supported: {_IMAGE_EXTS})"
+        )
 
     aligner = AlignFaceProcessor() if align else None
 

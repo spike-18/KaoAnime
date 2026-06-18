@@ -10,7 +10,12 @@ from torchmetrics.image.fid import FrechetInceptionDistance
 
 from kaoanime.config import Config
 from kaoanime.losses import CycleGANLoss
-from kaoanime.models import PatchDiscriminator, ResNetDiscriminator, ResNetGenerator, UNetGenerator
+from kaoanime.models import (
+    PatchDiscriminator,
+    ResNetDiscriminator,
+    ResNetGenerator,
+    UNetGenerator,
+)
 from kaoanime.utils import ImagePool, fid_should_accumulate, fid_should_compute
 
 
@@ -50,8 +55,8 @@ class KaoAnimeModel(pl.LightningModule):
         self.cfg = cfg
         self.g_ab = _make_generator(cfg)
         self.g_ba = _make_generator(cfg)
-        self.d_a  = _make_discriminator(cfg)
-        self.d_b  = _make_discriminator(cfg)
+        self.d_a = _make_discriminator(cfg)
+        self.d_b = _make_discriminator(cfg)
         self.criterion = CycleGANLoss(
             lambda_cycle=cfg.model.lambda_cycle,
             lambda_identity=cfg.model.lambda_identity,
@@ -77,15 +82,23 @@ class KaoAnimeModel(pl.LightningModule):
         for _ in range(self.cfg.train.gen_steps):
             fake_b = self.g_ab(real_a)  # A → B
             fake_a = self.g_ba(real_b)  # B → A
-            rec_a  = self.g_ba(fake_b)  # A → B → A
-            rec_b  = self.g_ab(fake_a)  # B → A → B
-            idt_b  = self.g_ab(real_b)  # G_AB(real_b) should ≈ real_b
-            idt_a  = self.g_ba(real_a)  # G_BA(real_a) should ≈ real_a
+            rec_a = self.g_ba(fake_b)  # A → B → A
+            rec_b = self.g_ab(fake_a)  # B → A → B
+            idt_b = self.g_ab(real_b)  # G_AB(real_b) should ≈ real_b
+            idt_a = self.g_ba(real_a)  # G_BA(real_a) should ≈ real_a
             disc_fake_a = self.d_a(fake_a)
             disc_fake_b = self.d_b(fake_b)
             loss_g = self.criterion.generator(
-                real_a, real_b, fake_a, fake_b, rec_a, rec_b,
-                disc_fake_a, disc_fake_b, idt_a, idt_b,
+                real_a,
+                real_b,
+                fake_a,
+                fake_b,
+                rec_a,
+                rec_b,
+                disc_fake_a,
+                disc_fake_b,
+                idt_a,
+                idt_b,
             )
             opt_g.zero_grad()
             self.manual_backward(loss_g)
@@ -96,12 +109,15 @@ class KaoAnimeModel(pl.LightningModule):
         # --- Discriminator update(s) ---
         self.toggle_optimizer(opt_d)
         for _ in range(self.cfg.train.disc_steps):
-            disc_real_a     = self.d_a(real_a)
+            disc_real_a = self.d_a(real_a)
             disc_fake_a_det = self.d_a(self.pool_a.query(fake_a))
-            disc_real_b     = self.d_b(real_b)
+            disc_real_b = self.d_b(real_b)
             disc_fake_b_det = self.d_b(self.pool_b.query(fake_b))
             loss_d = self.criterion.discriminator(
-                disc_real_a, disc_fake_a_det, disc_real_b, disc_fake_b_det,
+                disc_real_a,
+                disc_fake_a_det,
+                disc_real_b,
+                disc_fake_b_det,
             )
             opt_d.zero_grad()
             self.manual_backward(loss_d)
@@ -148,7 +164,11 @@ class KaoAnimeModel(pl.LightningModule):
             self.fid.reset()
             self._fid_images_seen = 0
         n = self.cfg.train.log_image_every_n_steps
-        if isinstance(self.logger, MLFlowLogger) and hasattr(self, "_log_batch") and self._train_step % n == 0:
+        if (
+            isinstance(self.logger, MLFlowLogger)
+            and hasattr(self, "_log_batch")
+            and self._train_step % n == 0
+        ):
             with torch.no_grad():
                 real_a = self._log_batch["A"].to(self.device)
                 fake_b = self.g_ab(real_a)
@@ -162,7 +182,6 @@ class KaoAnimeModel(pl.LightningModule):
                 _tensor_to_image(fake_b[0]),
                 f"images/{self.trainer.global_step:06d}_output.png",
             )
-
 
     def test_step(self, batch: dict, batch_idx: int) -> None:
         _ = self.g_ab(batch["A"])
@@ -181,7 +200,7 @@ class KaoAnimeModel(pl.LightningModule):
     def configure_optimizers(self):
         lr = self.cfg.train.lr
 
-        if self.cfg.model_type == 'not':
+        if self.cfg.model_type == "not":
             betas = (self.cfg.train.beta1, 0.999)
             opt_g = torch.optim.Adam(
                 list(self.g_ab.parameters()) + list(self.g_ba.parameters()),
@@ -205,7 +224,6 @@ class KaoAnimeModel(pl.LightningModule):
                 lr=lr,
                 alpha=alpha,
             )
-
 
         self._sch_g = torch.optim.lr_scheduler.LambdaLR(opt_g, self._lr_lambda)
         self._sch_d = torch.optim.lr_scheduler.LambdaLR(opt_d, self._lr_lambda)

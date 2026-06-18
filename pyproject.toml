@@ -32,5 +32,9 @@ name = "pytorch"
 url = "https://download.pytorch.org/whl/cu128"
 explicit = true
 
-[tool.pytest.ini_options]
+[tool.ruff.lint.per-file-ignores]
+# Notebooks are exploratory: allow short plotting variable names (E741) and
+# imports placed mid-cell rather than at the top (E402).
+"notebooks/*" = ["E741", "E402"]
 
+[tool.pytest.ini_options]

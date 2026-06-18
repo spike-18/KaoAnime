@@ -22,6 +22,7 @@ uv run python -m kaoanime.infer   # infer (module entry point)
 ## Data
 
 Tracked by DVC (`data.dvc`). After `dvc pull`, data lives in `data/selfie2anime/`:
+
 - `trainA/` / `trainB/` — 3 400 paired-domain training images
 - `testA/` / `testB/` — 100 test images per domain
 

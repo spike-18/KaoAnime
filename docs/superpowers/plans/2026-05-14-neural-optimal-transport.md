@@ -29,24 +29,24 @@ Key: MSE cost makes transport "efficient" (penalises large pixel changes). No cy
 
 ## File Map
 
-| Before | After |
-|--------|-------|
-| `kaoanime/models/cyclegan.py` | **deleted** — split into 3 files below |
-| *(new)* | `kaoanime/models/resnet.py` — `_ResBlock`, `ResNetGenerator`, `_ResBlockD`, `ResNetDiscriminator` |
-| *(new)* | `kaoanime/models/unet.py` — `_DoubleConv`, `_Down`, `_Up`, `UNetGenerator` |
-| *(new)* | `kaoanime/models/patch_discriminator.py` — `PatchDiscriminator` |
-| *(new)* | `kaoanime/models/not_potential.py` — `_ResBlockNOT`, `NOTPotential` |
-| `kaoanime/models/__init__.py` | Updated re-exports |
-| `kaoanime/config.py` | Content split — CycleGAN-specific moved out; DataConfig/EvalConfig/unified `Config` stay |
-| *(new)* | `kaoanime/config_cyclegan.py` — `TrainConfig`, `ModelConfig` |
-| *(new)* | `kaoanime/config_not.py` — `NOTConfig` |
-| `kaoanime/model.py` | **renamed** → `kaoanime/model_cyclegan.py` |
-| *(new)* | `kaoanime/model_not.py` — `NOTModel` |
-| `train.py` | Add `model_type` switch; update imports |
-| `eval.py` | Update import `kaoanime.model` → `kaoanime.model_cyclegan` |
-| `infer.py` | Update import `kaoanime.model` → `kaoanime.model_cyclegan` |
-| `tests/test_model.py` | Update import |
-| `tests/test_inference.py` | Update import |
+| Before                        | After                                                                                             |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `kaoanime/models/cyclegan.py` | **deleted** — split into 3 files below                                                            |
+| _(new)_                       | `kaoanime/models/resnet.py` — `_ResBlock`, `ResNetGenerator`, `_ResBlockD`, `ResNetDiscriminator` |
+| _(new)_                       | `kaoanime/models/unet.py` — `_DoubleConv`, `_Down`, `_Up`, `UNetGenerator`                        |
+| _(new)_                       | `kaoanime/models/patch_discriminator.py` — `PatchDiscriminator`                                   |
+| _(new)_                       | `kaoanime/models/not_potential.py` — `_ResBlockNOT`, `NOTPotential`                               |
+| `kaoanime/models/__init__.py` | Updated re-exports                                                                                |
+| `kaoanime/config.py`          | Content split — CycleGAN-specific moved out; DataConfig/EvalConfig/unified `Config` stay          |
+| _(new)_                       | `kaoanime/config_cyclegan.py` — `TrainConfig`, `ModelConfig`                                      |
+| _(new)_                       | `kaoanime/config_not.py` — `NOTConfig`                                                            |
+| `kaoanime/model.py`           | **renamed** → `kaoanime/model_cyclegan.py`                                                        |
+| _(new)_                       | `kaoanime/model_not.py` — `NOTModel`                                                              |
+| `train.py`                    | Add `model_type` switch; update imports                                                           |
+| `eval.py`                     | Update import `kaoanime.model` → `kaoanime.model_cyclegan`                                        |
+| `infer.py`                    | Update import `kaoanime.model` → `kaoanime.model_cyclegan`                                        |
+| `tests/test_model.py`         | Update import                                                                                     |
+| `tests/test_inference.py`     | Update import                                                                                     |
 
 ---
 
@@ -96,6 +96,7 @@ git checkout -b feat/not-model
 ## Task 3: Reorganize kaoanime/models/ — split cyclegan.py by building-block type
 
 **Files:**
+
 - Create: `kaoanime/models/resnet.py`
 - Create: `kaoanime/models/unet.py`
 - Create: `kaoanime/models/patch_discriminator.py`
@@ -382,6 +383,7 @@ Expected: `models/__init__.py OK — all shapes correct`
 ## Task 4: Add NOTPotential
 
 **Files:**
+
 - Create: `kaoanime/models/not_potential.py`
 
 `NOTPotential` = reference ResNet_D adapted for our codebase. No BN, no spectral norm, `res_ratio=0.1` weighted residual. Global avg pool → Linear(1) for scalar output.
@@ -479,6 +481,7 @@ Expected: `NOTPotential OK — shape torch.Size([2, 1]), params ~5M-10M`
 ## Task 5: Restructure config
 
 **Files:**
+
 - Create: `kaoanime/config_cyclegan.py` (TrainConfig + ModelConfig, moved from current config.py)
 - Create: `kaoanime/config_not.py` (NOTConfig, new)
 - Modify: `kaoanime/config.py` (keep DataConfig + EvalConfig; add `model_type`; import from the two new files; rewrite `Config` + `register_configs`)
@@ -621,6 +624,7 @@ print(f'  not_.t_iters={cfg.not_.t_iters}')
 ```
 
 Expected:
+
 ```
 Config OK
   model_type=cyclegan
@@ -634,6 +638,7 @@ Config OK
 ## Task 6: Rename model.py → model_cyclegan.py; update all import sites
 
 **Files:**
+
 - Rename: `kaoanime/model.py` → `kaoanime/model_cyclegan.py`
 - Modify: `train.py`, `eval.py`, `infer.py`, `tests/test_model.py`, `tests/test_inference.py`
 
@@ -646,10 +651,13 @@ git mv kaoanime/model.py kaoanime/model_cyclegan.py
 - [ ] **Step 6.2: Update `eval.py` — change import**
 
 In `eval.py`, replace:
+
 ```python
 from kaoanime.model import KaoAnimeModel
 ```
+
 with:
+
 ```python
 from kaoanime.model_cyclegan import KaoAnimeModel
 ```
@@ -657,10 +665,13 @@ from kaoanime.model_cyclegan import KaoAnimeModel
 - [ ] **Step 6.3: Update `infer.py` — change import**
 
 In `infer.py`, replace:
+
 ```python
 from kaoanime.model import KaoAnimeModel
 ```
+
 with:
+
 ```python
 from kaoanime.model_cyclegan import KaoAnimeModel
 ```
@@ -668,10 +679,13 @@ from kaoanime.model_cyclegan import KaoAnimeModel
 - [ ] **Step 6.4: Update `tests/test_model.py` — change import**
 
 In `tests/test_model.py`, replace:
+
 ```python
 from kaoanime.model import KaoAnimeModel
 ```
+
 with:
+
 ```python
 from kaoanime.model_cyclegan import KaoAnimeModel
 ```
@@ -679,10 +693,13 @@ from kaoanime.model_cyclegan import KaoAnimeModel
 - [ ] **Step 6.5: Update `tests/test_inference.py` — change import**
 
 In `tests/test_inference.py`, replace:
+
 ```python
 from kaoanime.model import KaoAnimeModel
 ```
+
 with:
+
 ```python
 from kaoanime.model_cyclegan import KaoAnimeModel
 ```
@@ -711,6 +728,7 @@ Expected: `model_cyclegan.py OK`
 ## Task 7: Create NOTModel
 
 **Files:**
+
 - Create: `kaoanime/model_not.py`
 
 `NOTModel` uses `UNetGenerator` as transport map T and `NOTPotential` as Kantorovich potential f.
@@ -881,6 +899,7 @@ print('model_not.py OK')
 ## Task 8: Update train.py for model selection
 
 **Files:**
+
 - Modify: `train.py`
 
 One `train.py` reads `cfg.model_type` and instantiates the right model. CycleGAN uses `max_epochs`; NOT uses `max_steps`. Each model reads its own sub-config for precision/lr/etc.
@@ -1158,16 +1177,19 @@ EOF
 ## Running training
 
 **CycleGAN** (default):
+
 ```bash
 uv run python train.py
 ```
 
 **NOT**:
+
 ```bash
 uv run python train.py model_type=not
 ```
 
 **Override NOT hyperparameters** via Hydra CLI:
+
 ```bash
 uv run python train.py model_type=not not_.t_iters=5 not_.t_lr=5e-5
 ```

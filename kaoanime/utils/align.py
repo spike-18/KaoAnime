@@ -1,4 +1,5 @@
 """Face alignment: MediaPipe FaceLandmarker (Tasks API) + OpenCV similarity transform."""
+
 from __future__ import annotations
 
 import urllib.request
@@ -26,11 +27,11 @@ _CELEBA_REF_128 = np.array(
 )
 
 # MediaPipe Face Mesh landmark indices for each key point group.
-_LEFT_EYE_IDX  = [362, 385, 387, 263, 373, 380]
-_RIGHT_EYE_IDX = [33,  160, 158, 133, 153, 144]
-_NOSE_IDX      = [4]
-_L_MOUTH_IDX   = [61]
-_R_MOUTH_IDX   = [291]
+_LEFT_EYE_IDX = [362, 385, 387, 263, 373, 380]
+_RIGHT_EYE_IDX = [33, 160, 158, 133, 153, 144]
+_NOSE_IDX = [4]
+_L_MOUTH_IDX = [61]
+_R_MOUTH_IDX = [291]
 
 _MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/"
@@ -111,7 +112,9 @@ class AlignFaceProcessor:
             return None
 
         return cv2.warpAffine(
-            image, M, (size, size),
+            image,
+            M,
+            (size, size),
             flags=cv2.INTER_LINEAR,
             borderMode=cv2.BORDER_REPLICATE,
             # borderValue=(255, 255, 255)

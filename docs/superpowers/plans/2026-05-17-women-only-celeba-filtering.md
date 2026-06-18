@@ -14,11 +14,11 @@
 
 ## File Structure
 
-| File | Responsibility | Change |
-|------|----------------|--------|
-| `kaoanime/utils/dataset.py` | Dataset + file collection | Add `import csv`, two module-level constants, `_find_celeba_attr_csv`, `_load_female_ids`; rework `UnpairedImageDataset.__init__` file collection |
-| `tests/test_dataset.py` | Dataset unit tests | Add tests for the two helpers + filtering behavior + fail-loud; add a CSV-writer helper and use it in the 5 existing tests that build `UnpairedImageDataset` |
-| `tests/test_dataloader.py` | DataLoader unit tests | Add the same CSV-writer helper and use it in the 2 existing tests that build `UnpairedImageDataset` |
+| File                        | Responsibility            | Change                                                                                                                                                       |
+| --------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `kaoanime/utils/dataset.py` | Dataset + file collection | Add `import csv`, two module-level constants, `_find_celeba_attr_csv`, `_load_female_ids`; rework `UnpairedImageDataset.__init__` file collection            |
+| `tests/test_dataset.py`     | Dataset unit tests        | Add tests for the two helpers + filtering behavior + fail-loud; add a CSV-writer helper and use it in the 5 existing tests that build `UnpairedImageDataset` |
+| `tests/test_dataloader.py`  | DataLoader unit tests     | Add the same CSV-writer helper and use it in the 2 existing tests that build `UnpairedImageDataset`                                                          |
 
 No changes to `train.py`, `eval.py`, `config.py`, or domain B handling.
 
@@ -27,6 +27,7 @@ No changes to `train.py`, `eval.py`, `config.py`, or domain B handling.
 ### Task 1: `_load_female_ids` — parse the attribute CSV
 
 **Files:**
+
 - Modify: `kaoanime/utils/dataset.py` (add `import csv` and the function)
 - Test: `tests/test_dataset.py`
 
@@ -114,6 +115,7 @@ git commit -m "feat: add _load_female_ids CelebA attribute parser"
 ### Task 2: `_find_celeba_attr_csv` — locate the CSV by walking up
 
 **Files:**
+
 - Modify: `kaoanime/utils/dataset.py` (add two constants + the function)
 - Test: `tests/test_dataset.py`
 
@@ -197,6 +199,7 @@ breaks the 5 existing `test_dataset.py` tests and the 2 existing
 this same task repairs them. The suite must be green before the commit.
 
 **Files:**
+
 - Modify: `kaoanime/utils/dataset.py` (`UnpairedImageDataset.__init__`)
 - Test: `tests/test_dataset.py` (new behavior tests + repair 5 existing)
 - Test: `tests/test_dataloader.py` (repair 2 existing)
@@ -428,6 +431,7 @@ so roughly ~115k–120k), printed with no exception.
 ## Self-Review
 
 **1. Spec coverage:**
+
 - Filter in dataset from attribute CSV → Tasks 1–3.
 - Hardcoded/unconditional (no config field) → Task 3 `__init__` (no config touched).
 - `_find_celeba_attr_csv` walk-up → Task 2.
@@ -438,7 +442,7 @@ so roughly ~115k–120k), printed with no exception.
 - Files absent from CSV excluded (conservative) → Task 3 Step 3 list comprehension (`p.name in female_ids`) + test `test_dataset_keeps_only_female_root_a` (`m0.jpg` excluded).
 - Auto-applies to train and eval (no entry-point change) → File Structure note; `train.py`/`eval.py` untouched because filtering keys on the dataset's `root_a`.
 - All Python via `uv run` → every run/command uses `uv run` / `uvx`.
-No gaps.
+  No gaps.
 
 **2. Placeholder scan:** No TBD/TODO/"handle edge cases"/"similar to". Every code step shows complete code; every run step shows the exact command and expected output.
 

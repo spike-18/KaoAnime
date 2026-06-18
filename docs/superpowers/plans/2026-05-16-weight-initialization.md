@@ -7,6 +7,7 @@
 **Architecture:** A single `init_weights(module, init_type, gain)` utility lives in `kaoanime/models/weights_init.py`. Each model's `__init__` calls `self.apply(...)` with the type appropriate to its activation function and normalization scheme. Two types are used: `"normal"` (CycleGAN paper standard, Normal(0, 0.02)) for generators and PatchDiscriminator; `"kaiming"` (Kaiming-normal with a=0.2 for LeakyReLU) for NOTPotential and ResNetDiscriminator which have no batch/instance-norm layers.
 
 **Why two different init types:**
+
 - Generators and PatchDiscriminator use InstanceNorm layers that re-centre activations, so the exact weight scale matters less — Normal(0, 0.02) is the established CycleGAN-paper standard.
 - NOTPotential and ResNetDiscriminator have no normalization (only LeakyReLU), so proper Kaiming scaling is needed to keep variance stable across the network depth.
 
@@ -18,21 +19,22 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
-| `kaoanime/models/weights_init.py` | Create: `init_weights` utility function |
-| `kaoanime/models/__init__.py` | Export `init_weights` |
-| `kaoanime/models/unet.py` | Apply `init_weights(self, "normal")` in `UNetGenerator.__init__` |
-| `kaoanime/models/resnet.py` | Apply `"normal"` to `ResNetGenerator`, `"kaiming"` to `ResNetDiscriminator` |
-| `kaoanime/models/patch_discriminator.py` | Apply `init_weights(self, "normal")` in `PatchDiscriminator.__init__` |
-| `kaoanime/models/not_potential.py` | Apply `init_weights(self, "kaiming")` in `NOTPotential.__init__` |
-| `tests/test_weights_init.py` | Create: tests for `init_weights` and per-model weight statistics |
+| File                                     | Change                                                                      |
+| ---------------------------------------- | --------------------------------------------------------------------------- |
+| `kaoanime/models/weights_init.py`        | Create: `init_weights` utility function                                     |
+| `kaoanime/models/__init__.py`            | Export `init_weights`                                                       |
+| `kaoanime/models/unet.py`                | Apply `init_weights(self, "normal")` in `UNetGenerator.__init__`            |
+| `kaoanime/models/resnet.py`              | Apply `"normal"` to `ResNetGenerator`, `"kaiming"` to `ResNetDiscriminator` |
+| `kaoanime/models/patch_discriminator.py` | Apply `init_weights(self, "normal")` in `PatchDiscriminator.__init__`       |
+| `kaoanime/models/not_potential.py`       | Apply `init_weights(self, "kaiming")` in `NOTPotential.__init__`            |
+| `tests/test_weights_init.py`             | Create: tests for `init_weights` and per-model weight statistics            |
 
 ---
 
 ## Task 1 — Create `init_weights` utility and tests
 
 **Files:**
+
 - Create: `kaoanime/models/weights_init.py`
 - Create: `tests/test_weights_init.py`
 
@@ -173,6 +175,7 @@ git commit -m "feat: add init_weights utility (normal/kaiming, spectral-norm-saf
 ## Task 2 — Apply initialization to all model classes
 
 **Files:**
+
 - Modify: `kaoanime/models/unet.py`
 - Modify: `kaoanime/models/resnet.py`
 - Modify: `kaoanime/models/patch_discriminator.py`
@@ -428,6 +431,7 @@ git commit -m "feat: apply weight initialization to all model classes (normal fo
 ## Self-review
 
 **Spec coverage:**
+
 - ✅ `init_weights` utility: Task 1
 - ✅ `"normal"` for UNetGenerator: Task 2
 - ✅ `"normal"` for ResNetGenerator: Task 2

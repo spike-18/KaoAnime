@@ -12,20 +12,21 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
-| `kaoanime/callbacks.py` | Create: `MLflowCheckpointCallback` |
-| `kaoanime/config_cyclegan.py` | Add `resume_from_checkpoint: str = ""` to `CycleGANTrainConfig` |
-| `kaoanime/config_not.py` | Add `resume_from_checkpoint: str = ""` to `NOTConfig` |
-| `train.py` | Use `MLflowCheckpointCallback`; remove post-fit logging; pass `ckpt_path` to `trainer.fit()` |
-| `tests/test_callbacks.py` | Create: unit tests for `MLflowCheckpointCallback._log_last_to_mlflow` |
-| `tests/test_model.py` | Add: `test_resume_from_checkpoint` |
+| File                          | Change                                                                                       |
+| ----------------------------- | -------------------------------------------------------------------------------------------- |
+| `kaoanime/callbacks.py`       | Create: `MLflowCheckpointCallback`                                                           |
+| `kaoanime/config_cyclegan.py` | Add `resume_from_checkpoint: str = ""` to `CycleGANTrainConfig`                              |
+| `kaoanime/config_not.py`      | Add `resume_from_checkpoint: str = ""` to `NOTConfig`                                        |
+| `train.py`                    | Use `MLflowCheckpointCallback`; remove post-fit logging; pass `ckpt_path` to `trainer.fit()` |
+| `tests/test_callbacks.py`     | Create: unit tests for `MLflowCheckpointCallback._log_last_to_mlflow`                        |
+| `tests/test_model.py`         | Add: `test_resume_from_checkpoint`                                                           |
 
 ---
 
 ## Task 1 — `MLflowCheckpointCallback` and its tests
 
 **Files:**
+
 - Create: `kaoanime/callbacks.py`
 - Create: `tests/test_callbacks.py`
 
@@ -149,6 +150,7 @@ git commit -m "feat: MLflowCheckpointCallback logs checkpoint to MLflow during t
 ## Task 2 — Config fields, train.py wiring, and resume test
 
 **Files:**
+
 - Modify: `kaoanime/config_cyclegan.py`
 - Modify: `kaoanime/config_not.py`
 - Modify: `train.py`
@@ -359,6 +361,7 @@ if __name__ == "__main__":
 ```
 
 Key changes from the original:
+
 1. `from kaoanime.callbacks import MLflowCheckpointCallback` added, `ModelCheckpoint` import removed
 2. Both `ModelCheckpoint(...)` calls replaced with `MLflowCheckpointCallback(...)`
 3. `ckpt_path` read from config (`cfg.not_.resume_from_checkpoint` or `cfg.train.resume_from_checkpoint`), empty string converted to `None`
@@ -380,6 +383,7 @@ print('Config OK')
 ```
 
 Expected:
+
 ```
 cyclegan resume_from_checkpoint: ''
 not resume_from_checkpoint: ''
@@ -414,11 +418,13 @@ git commit -m "feat: wire MLflowCheckpointCallback and resume_from_checkpoint co
 ## Usage after this plan is complete
 
 **Resume training (CycleGAN):**
+
 ```bash
 uv run python -m kaoanime.train train.resume_from_checkpoint=/path/to/last.ckpt
 ```
 
 **Resume training (NOT):**
+
 ```bash
 uv run python -m kaoanime.train not_.resume_from_checkpoint=/path/to/last.ckpt
 ```
@@ -430,6 +436,7 @@ The checkpoint path is the local `.ckpt` file. Download it from MLflow artifacts
 ## Self-review
 
 **Spec coverage:**
+
 - ✅ Checkpoint logged during training (not after): `MLflowCheckpointCallback.on_train_epoch_end` + `on_train_end` — Task 1
 - ✅ Logged even on early stop: `on_train_end` is called by Lightning on graceful Ctrl+C — Task 1
 - ✅ Post-fit artifact logging removed: Task 2 step 2.5

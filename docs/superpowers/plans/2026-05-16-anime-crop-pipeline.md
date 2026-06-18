@@ -12,20 +12,21 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
-| `kaoanime/utils/dataset.py` | Replace `_anime_crop` body + signature; update `UnpairedImageDataset.__init__` and `__getitem__` |
-| `kaoanime/config.py` | Remove `anime_scale`, `anime_shift_x`, `anime_shift_y`; add `anime_offset_x`, `anime_offset_y` |
-| `train.py` | Update `UnpairedImageDataset(...)` call: remove 3 old kwargs, add 2 new ones |
-| `tests/test_dataset.py` | Add `test_anime_crop_*` tests |
-| `notebooks/04_data_pipeline.ipynb` | Update Section 2 cells to use new `_anime_crop(img, 0, -7)` signature |
-| `notebooks/06_anime_pipeline.ipynb` | Update `current_pipeline` helper and offset default to `-7` |
+| File                                | Change                                                                                           |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `kaoanime/utils/dataset.py`         | Replace `_anime_crop` body + signature; update `UnpairedImageDataset.__init__` and `__getitem__` |
+| `kaoanime/config.py`                | Remove `anime_scale`, `anime_shift_x`, `anime_shift_y`; add `anime_offset_x`, `anime_offset_y`   |
+| `train.py`                          | Update `UnpairedImageDataset(...)` call: remove 3 old kwargs, add 2 new ones                     |
+| `tests/test_dataset.py`             | Add `test_anime_crop_*` tests                                                                    |
+| `notebooks/04_data_pipeline.ipynb`  | Update Section 2 cells to use new `_anime_crop(img, 0, -7)` signature                            |
+| `notebooks/06_anime_pipeline.ipynb` | Update `current_pipeline` helper and offset default to `-7`                                      |
 
 ---
 
 ## Task 1 — Replace `_anime_crop` and test it
 
 **Files:**
+
 - Modify: `kaoanime/utils/dataset.py:37-47`
 - Modify: `tests/test_dataset.py`
 
@@ -138,6 +139,7 @@ git commit -m "feat: replace _anime_crop with fixed 3-stage pipeline (resize-512
 ## Task 2 — Update config, dataset constructor, and train.py
 
 **Files:**
+
 - Modify: `kaoanime/config.py:25-27`
 - Modify: `kaoanime/utils/dataset.py:60-85`
 - Modify: `train.py:34-36`
@@ -239,6 +241,7 @@ print('Config OK')
 ```
 
 Expected:
+
 ```
 anime_offset_x=0
 anime_offset_y=-7
@@ -265,6 +268,7 @@ git commit -m "feat: wire new anime_offset_x/y params through config, dataset, a
 ## Task 3 — Update notebooks
 
 **Files:**
+
 - Modify: `notebooks/04_data_pipeline.ipynb`
 - Modify: `notebooks/06_anime_pipeline.ipynb`
 
@@ -309,6 +313,7 @@ def current_pipeline_historical(path: Path) -> Image.Image:
 ```
 
 Update the Section 3 suptitle to read:
+
 ```
 'Top: proposed (offset_y=−7)    Bottom: old scale-based crop (historical)'
 ```
@@ -334,6 +339,7 @@ git commit -m "chore: update notebooks to use new anime_crop API (offset_x=0, of
 ## Self-review
 
 **Spec coverage:**
+
 - ✅ New pipeline (resize 512 → crop 256 at offset → caller resizes to 128): Task 1
 - ✅ offset_x=0, offset_y=-7 defaults: Tasks 1 (function default) + 2 (config default)
 - ✅ Old params removed from config: Task 2

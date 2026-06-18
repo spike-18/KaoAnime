@@ -12,13 +12,13 @@
 
 ## File Map
 
-| File | Change |
-|---|---|
+| File                      | Change                                                             |
+| ------------------------- | ------------------------------------------------------------------ |
 | `kaoanime/models/unet.py` | Replace both `InstanceNorm2d` → `BatchNorm2d` in `_DoubleConv.net` |
-| `kaoanime/config_not.py` | Add `t_grad_clip: float = 100.0` |
-| `kaoanime/model_not.py` | Add `clip_grad_norm_` call after `manual_backward` in T inner loop |
-| `tests/test_unet.py` | New file: tests for BatchNorm presence and output shape/range |
-| `tests/test_model_not.py` | Add two tests: config field exists, clip called during training |
+| `kaoanime/config_not.py`  | Add `t_grad_clip: float = 100.0`                                   |
+| `kaoanime/model_not.py`   | Add `clip_grad_norm_` call after `manual_backward` in T inner loop |
+| `tests/test_unet.py`      | New file: tests for BatchNorm presence and output shape/range      |
+| `tests/test_model_not.py` | Add two tests: config field exists, clip called during training    |
 
 ---
 
@@ -30,6 +30,7 @@ normalizes per-image (stripping global batch statistics), which conflicts with t
 quadratic MSE cost that T must minimize across the batch.
 
 **Files:**
+
 - Modify: `kaoanime/models/unet.py`
 - Create: `tests/test_unet.py`
 
@@ -127,6 +128,7 @@ oversized gradient steps. Add `clip_grad_norm_` after `manual_backward` and befo
 `_tiny_cfg()` and `_PairedDataset` are already defined in `tests/test_model_not.py`.
 
 **Files:**
+
 - Modify: `kaoanime/config_not.py`
 - Modify: `kaoanime/model_not.py`
 - Modify: `tests/test_model_not.py`
@@ -283,6 +285,7 @@ print('NOTConfig OK')
 ```
 
 Expected:
+
 ```
 UNetGenerator OK — params <N>
 NOTConfig OK

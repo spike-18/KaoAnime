@@ -13,17 +13,35 @@ class PatchDiscriminator(nn.Module):
         super().__init__()
         nf = num_filters
         self.model = nn.Sequential(
-            nn.utils.spectral_norm(nn.Conv2d(in_channels, nf, kernel_size=4, stride=2, padding=1)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(in_channels, nf, kernel_size=4, stride=2, padding=1)
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.utils.spectral_norm(nn.Conv2d(nf, nf * 2, kernel_size=4, stride=2, padding=1, bias=False)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(nf, nf * 2, kernel_size=4, stride=2, padding=1, bias=False)
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.utils.spectral_norm(nn.Conv2d(nf * 2, nf * 4, kernel_size=4, stride=2, padding=1, bias=False)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(
+                    nf * 2, nf * 4, kernel_size=4, stride=2, padding=1, bias=False
+                )
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.utils.spectral_norm(nn.Conv2d(nf * 4, nf * 8, kernel_size=4, stride=1, padding=1, bias=False)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(
+                    nf * 4, nf * 8, kernel_size=4, stride=1, padding=1, bias=False
+                )
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.utils.spectral_norm(nn.Conv2d(nf * 8, nf * 8, kernel_size=4, stride=1, padding=1, bias=False)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(
+                    nf * 8, nf * 8, kernel_size=4, stride=1, padding=1, bias=False
+                )
+            ),
             nn.LeakyReLU(0.2, inplace=True),
-            nn.utils.spectral_norm(nn.Conv2d(nf * 8, 1, kernel_size=4, stride=1, padding=1)),
+            nn.utils.spectral_norm(
+                nn.Conv2d(nf * 8, 1, kernel_size=4, stride=1, padding=1)
+            ),
         )
         init_weights(self, "normal", gain=0.02)
 

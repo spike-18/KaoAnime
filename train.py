@@ -19,7 +19,9 @@ def _make_model(cfg: Config) -> pl.LightningModule:
         return KaoAnimeModel(cfg)
     if cfg.model_type == "not":
         return NOTModel(cfg)
-    raise ValueError(f"Unknown model_type {cfg.model_type!r}. Choose 'cyclegan' or 'not'.")
+    raise ValueError(
+        f"Unknown model_type {cfg.model_type!r}. Choose 'cyclegan' or 'not'."
+    )
 
 
 @hydra.main(version_base=None, config_path=None, config_name="config")
@@ -59,7 +61,11 @@ def main(cfg: Config) -> None:
             precision=cfg.not_.precision,
             log_every_n_steps=cfg.not_.log_every_n_steps,
             logger=logger,
-            callbacks=[MLflowCheckpointCallback(filename="step{step:06d}", save_last=True, save_top_k=0)],
+            callbacks=[
+                MLflowCheckpointCallback(
+                    filename="step{step:06d}", save_last=True, save_top_k=0
+                )
+            ],
         )
         ckpt_path = cfg.not_.resume_from_checkpoint or None
     else:
@@ -74,7 +80,11 @@ def main(cfg: Config) -> None:
             precision=cfg.train.precision,
             log_every_n_steps=cfg.train.log_every_n_steps,
             logger=logger,
-            callbacks=[MLflowCheckpointCallback(filename="epoch{epoch:03d}", save_last=True, save_top_k=0)],
+            callbacks=[
+                MLflowCheckpointCallback(
+                    filename="epoch{epoch:03d}", save_last=True, save_top_k=0
+                )
+            ],
         )
         ckpt_path = cfg.train.resume_from_checkpoint or None
 

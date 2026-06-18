@@ -71,10 +71,10 @@ Domain B (`root_b`, `extra_roots_b`) is untouched.
 
 ## Data Flow
 
-| Caller | First positional arg → dataset `root_a` | Result |
-|---|---|---|
-| `train.py:27` | `cfg.data.root_a` (CelebA train dir) | Filtered to women |
-| `eval.py:15` | `cfg.data.test_a` (CelebA `test/` dir) | Filtered to women |
+| Caller        | First positional arg → dataset `root_a` | Result            |
+| ------------- | --------------------------------------- | ----------------- |
+| `train.py:27` | `cfg.data.root_a` (CelebA train dir)    | Filtered to women |
+| `eval.py:15`  | `cfg.data.test_a` (CelebA `test/` dir)  | Filtered to women |
 
 Both CelebA directories use image-id filenames (e.g. `000088.jpg`,
 `202570.jpg`) that the single `list_attr_celeba.csv` covers, so one source of

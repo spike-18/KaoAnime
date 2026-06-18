@@ -64,5 +64,5 @@ class NOTPotential(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.input_conv(x)
         x = self.features(x)
-        x = x.mean(dim=[2, 3])      # global avg pool → (B, ch[-1])
-        return self.classifier(x)   # (B, 1), no activation
+        x = x.mean(dim=[2, 3])  # global avg pool → (B, ch[-1])
+        return self.classifier(x)  # (B, 1), no activation

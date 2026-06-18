@@ -12,27 +12,29 @@
 
 ## File Map
 
-| File | Change |
-|------|--------|
-| `pyproject.toml` | Add `mediapipe>=0.10`, `opencv-python>=4.8` |
-| `kaoanime/utils/align.py` | **New**: `AlignFaceProcessor`, `align_face()` |
-| `kaoanime/utils/__init__.py` | Export `align_face` |
-| `scripts/align_dataset.py` | **New**: offline batch alignment CLI |
-| `kaoanime/config.py` | Add `align: bool = False` to `EvalConfig` |
+| File                             | Change                                          |
+| -------------------------------- | ----------------------------------------------- |
+| `pyproject.toml`                 | Add `mediapipe>=0.10`, `opencv-python>=4.8`     |
+| `kaoanime/utils/align.py`        | **New**: `AlignFaceProcessor`, `align_face()`   |
+| `kaoanime/utils/__init__.py`     | Export `align_face`                             |
+| `scripts/align_dataset.py`       | **New**: offline batch alignment CLI            |
+| `kaoanime/config.py`             | Add `align: bool = False` to `EvalConfig`       |
 | `kaoanime/inference/__init__.py` | Accept `align` param; apply alignment per image |
-| `infer.py` | Pass `cfg.eval.align` to `run_inference` |
-| `tests/test_align.py` | **New**: unit tests for alignment module |
+| `infer.py`                       | Pass `cfg.eval.align` to `run_inference`        |
+| `tests/test_align.py`            | **New**: unit tests for alignment module        |
 
 ---
 
 ### Task 1: Add dependencies
 
 **Files:**
+
 - Modify: `pyproject.toml`
 
 - [ ] **Step 1.1: Add mediapipe and opencv-python to pyproject.toml**
 
 In the `dependencies` list add two entries:
+
 ```toml
 dependencies = [
     "hydra-core>=1.3",
@@ -67,6 +69,7 @@ Expected: prints both version strings.
 ### Task 2: Write failing tests for the alignment module
 
 **Files:**
+
 - Create: `tests/test_align.py`
 
 - [ ] **Step 2.1: Create the test file**
@@ -170,6 +173,7 @@ Expected: `ModuleNotFoundError` or `ImportError` — `kaoanime.utils.align` does
 ### Task 3: Implement `kaoanime/utils/align.py`
 
 **Files:**
+
 - Create: `kaoanime/utils/align.py`
 
 - [ ] **Step 3.1: Create the module**
@@ -312,6 +316,7 @@ git commit -m "feat: add AlignFaceProcessor and align_face (MediaPipe + similari
 ### Task 4: Export `align_face` from `kaoanime.utils`
 
 **Files:**
+
 - Modify: `kaoanime/utils/__init__.py`
 
 - [ ] **Step 4.1: Update exports**
@@ -355,9 +360,11 @@ git commit -m "chore: export align_face from kaoanime.utils"
 ### Task 5: Offline batch alignment script
 
 **Files:**
+
 - Create: `scripts/align_dataset.py`
 
 The script supports two `--mode` values:
+
 - `real` (default): MediaPipe landmark detection + similarity warp. Use for CelebA and any real-photo dataset, or for user-supplied images. Images where no face is detected are **skipped**.
 - `center-crop`: Fixed square centre-crop + resize. Use for the "aligned anime faces" dataset, which is already centred and consistently scaled — no detection needed, zero skips.
 
@@ -539,6 +546,7 @@ git commit -m "feat: add offline batch face alignment script (real + center-crop
 ### Task 6: Wire alignment into inference pipeline
 
 **Files:**
+
 - Modify: `kaoanime/config.py`
 - Modify: `kaoanime/inference/__init__.py`
 - Modify: `infer.py`
@@ -547,6 +555,7 @@ git commit -m "feat: add offline batch face alignment script (real + center-crop
 - [ ] **Step 6.1: Add `align` field to `EvalConfig` in `kaoanime/config.py`**
 
 In `EvalConfig`, add `align` after `direction`:
+
 ```python
 @dataclass
 class EvalConfig:
@@ -560,6 +569,7 @@ class EvalConfig:
 - [ ] **Step 6.2: Write failing tests for the alignment-in-inference path**
 
 Add to the bottom of `tests/test_inference.py`:
+
 ```python
 def test_infer_align_false_does_not_crash(tmp_path):
     """align=False should work identically to the old signature."""
@@ -582,15 +592,18 @@ def test_infer_align_true_solid_image_still_produces_output(tmp_path):
 ```
 
 Run to verify failure:
+
 ```bash
 uv run pytest tests/test_inference.py::test_infer_align_false_does_not_crash \
               tests/test_inference.py::test_infer_align_true_solid_image_still_produces_output -v
 ```
+
 Expected: `TypeError: run_inference() got an unexpected keyword argument 'align'`
 
 - [ ] **Step 6.3: Update `kaoanime/inference/__init__.py`**
 
 Replace the full file:
+
 ```python
 # kaoanime/inference/__init__.py
 from __future__ import annotations
@@ -674,6 +687,7 @@ def run_inference(
 - [ ] **Step 6.4: Pass `align` flag in `infer.py`**
 
 In `infer.py`, update the `run_inference` call to include the align flag:
+
 ```python
     written = run_inference(
         model,
@@ -706,6 +720,7 @@ git commit -m "feat: wire face alignment into inference (eval.align=True falls b
 ## Usage After Implementation
 
 **Preprocessing CelebA (real faces):**
+
 ```bash
 uv run python scripts/align_dataset.py \
     --input  data/celebA/img_align_celeba \
@@ -714,6 +729,7 @@ uv run python scripts/align_dataset.py \
 ```
 
 **Preprocessing aligned anime faces (centre-crop normalisation):**
+
 ```bash
 uv run python scripts/align_dataset.py \
     --input  data/aligned_anime_faces \
@@ -722,12 +738,14 @@ uv run python scripts/align_dataset.py \
 ```
 
 **Point training config at aligned data:**
+
 ```
 data.root_a=data/celebA_aligned
 data.extra_roots_b='[data/aligned_anime_faces_norm]'
 ```
 
 **Run inference with alignment (user selfie input):**
+
 ```bash
 uv run python -m kaoanime.infer \
     eval.checkpoint=outputs/.../last.ckpt \

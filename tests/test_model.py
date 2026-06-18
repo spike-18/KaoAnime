@@ -52,7 +52,7 @@ def test_config_defaults():
     assert cfg.train.max_epochs == 100
     assert cfg.train.lr == pytest.approx(0.001)
     assert cfg.train.beta1 == pytest.approx(0.5)
-    assert cfg.data.batch_size == 128
+    assert cfg.data.batch_size == 64
     assert cfg.data.image_size == 128
     assert cfg.eval.output_dir == "outputs/eval"
     assert cfg.model.num_filters == 48
@@ -125,7 +125,9 @@ def test_resume_from_checkpoint(tmp_path):
         callbacks=[ckpt_cb2],
         enable_progress_bar=False,
     )
-    trainer2.fit(model2, train_dataloaders=_make_fake_loader(), ckpt_path=str(ckpt_path))
+    trainer2.fit(
+        model2, train_dataloaders=_make_fake_loader(), ckpt_path=str(ckpt_path)
+    )
     # Lightning restores epoch counter; with max_epochs=2 and resuming from epoch 1,
     # only one more epoch runs → current_epoch==2 (past the last completed epoch).
     assert trainer2.current_epoch == 2

@@ -46,7 +46,14 @@ class ResNetGenerator(nn.Module):
         ]
         for i in range(3):
             layers += [
-                nn.Conv2d(enc_channels[i], enc_channels[i + 1], kernel_size=3, stride=2, padding=1, bias=False),
+                nn.Conv2d(
+                    enc_channels[i],
+                    enc_channels[i + 1],
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=False,
+                ),
                 nn.InstanceNorm2d(enc_channels[i + 1]),
                 nn.ReLU(inplace=True),
             ]
@@ -55,7 +62,15 @@ class ResNetGenerator(nn.Module):
             layers.append(_ResBlock(nf))
         for i in range(3, 0, -1):
             layers += [
-                nn.ConvTranspose2d(enc_channels[i], enc_channels[i - 1], kernel_size=3, stride=2, padding=1, output_padding=1, bias=False),
+                nn.ConvTranspose2d(
+                    enc_channels[i],
+                    enc_channels[i - 1],
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    output_padding=1,
+                    bias=False,
+                ),
                 nn.InstanceNorm2d(enc_channels[i - 1]),
                 nn.ReLU(inplace=True),
             ]
@@ -72,7 +87,9 @@ class ResNetGenerator(nn.Module):
 
 
 class _ResBlockD(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, res_ratio: float = 0.1) -> None:
+    def __init__(
+        self, in_channels: int, out_channels: int, res_ratio: float = 0.1
+    ) -> None:
         super().__init__()
         self.res_ratio = res_ratio
         sn = nn.utils.spectral_norm

@@ -200,4 +200,4 @@ kaoanime-selfie2anime/
 Натренированная модель сохраняется как Lightning-чекпойнт (`.ckpt`) и логируется
 как артефакт в MLflow. Для продакшена планируется экспорт в ONNX и TensorRT, а также
 поднятие inference-сервера (см. разделы Production preparation / Inference server —
-*в разработке*).
+_в разработке_).

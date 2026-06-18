@@ -9,7 +9,9 @@ from kaoanime.config_not import NOTConfig
 
 @dataclass
 class DataConfig:
-    root_a: str = "/beta/students/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
+    root_a: str = (
+        "/beta/students/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
+    )
     root_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/safebooru_jpeg"
     test_a: str = "/beta/students/madorskii/datasets/CelebA/test"
     test_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/test"
@@ -36,7 +38,7 @@ class EvalConfig:
 
 @dataclass
 class Config:
-    model_type: str = "not"   # "cyclegan" or "not"
+    model_type: str = "not"  # "cyclegan" or "not"
     data: DataConfig = field(default_factory=DataConfig)
     eval: EvalConfig = field(default_factory=EvalConfig)
     # CycleGAN-specific (ignored when model_type="not")

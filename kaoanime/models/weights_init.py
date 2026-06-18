@@ -4,7 +4,9 @@ import torch.nn as nn
 from torch.nn import init
 
 
-def init_weights(module: nn.Module, init_type: str = "normal", gain: float = 0.02) -> None:
+def init_weights(
+    module: nn.Module, init_type: str = "normal", gain: float = 0.02
+) -> None:
     """Apply weight initialization to *module* and all its children in-place.
 
     init_type:
@@ -27,7 +29,9 @@ def init_weights(module: nn.Module, init_type: str = "normal", gain: float = 0.0
         elif init_type == "kaiming":
             init.kaiming_normal_(w.data, a=0.2, mode="fan_in")
         else:
-            raise ValueError(f"Unknown init_type: {init_type!r}. Use 'normal' or 'kaiming'.")
+            raise ValueError(
+                f"Unknown init_type: {init_type!r}. Use 'normal' or 'kaiming'."
+            )
         if m.bias is not None:
             init.constant_(m.bias.data, 0.0)
 

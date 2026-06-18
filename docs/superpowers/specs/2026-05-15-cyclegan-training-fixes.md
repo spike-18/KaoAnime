@@ -58,14 +58,14 @@ No other changes to `generator()` or `discriminator()` method bodies.
 
 ### `kaoanime/config_cyclegan.py`
 
-| Field | Old | New |
-|-------|-----|-----|
-| `lr` | `1e-3` | `2e-4` |
-| `alpha` | `0.993` | _(removed)_ |
-| `beta1` | _(missing)_ | `0.5` |
-| `disc_steps` | `5` | `1` |
-| `lambda_cycle` | `10.0` | `2.0` |
-| `lambda_identity` | `5.0` | `1.0` |
+| Field             | Old         | New         |
+| ----------------- | ----------- | ----------- |
+| `lr`              | `1e-3`      | `2e-4`      |
+| `alpha`           | `0.993`     | _(removed)_ |
+| `beta1`           | _(missing)_ | `0.5`       |
+| `disc_steps`      | `5`         | `1`         |
+| `lambda_cycle`    | `10.0`      | `2.0`       |
+| `lambda_identity` | `5.0`       | `1.0`       |
 
 ### `kaoanime/model_cyclegan.py`
 
