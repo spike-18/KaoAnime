@@ -1,6 +1,7 @@
 from omegaconf import OmegaConf
 
 from kaoanime.config import Config
+from kaoanime.data import required_data_dirs
 
 
 def test_demo_variant_paths_resolve():
@@ -17,3 +18,14 @@ def test_full_variant_paths_resolve():
     cfg.data.variant = "full"
     assert cfg.data.root_a == "data/full/trainA"
     assert cfg.data.test_b == "data/full/testB"
+
+
+def test_required_data_dirs_lists_four_split_dirs():
+    cfg = OmegaConf.structured(Config)
+    dirs = required_data_dirs(cfg)
+    assert [str(d) for d in dirs] == [
+        "data/demo/trainA",
+        "data/demo/trainB",
+        "data/demo/testA",
+        "data/demo/testB",
+    ]
