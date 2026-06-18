@@ -1,82 +1,82 @@
-# KaoAnime — перенос стиля «селфи → аниме»
+# KaoAnime — selfie-to-anime style transfer
 
-KaoAnime переносит реальное фото лица в аниме-стиль с помощью нейросетевого
-image-to-image перевода между двумя неспаренными доменами. Основная модель —
-**Neural Optimal Transport (NOT)** (Korotin et al., ICLR 2023); как альтернатива
-доступен **CycleGAN**, разделяющий с NOT общие строительные блоки.
+KaoAnime turns a real face photo into an anime-style portrait via neural
+image-to-image translation between two unpaired domains. The main model is
+**Neural Optimal Transport (NOT)** (Korotin et al., ICLR 2023); a **CycleGAN**
+alternative that shares the same building blocks is also available.
 
-## Смысловое содержание проекта
+## Project overview
 
-### Задача
+### Task
 
-Есть два набора изображений лиц без парных соответствий: домен **A** — реальные
-фото (CelebA), домен **B** — аниме-лица (safebooru). Цель — обучить отображение
-`T: A → B`, переносящее фото в аниме-стиль с сохранением геометрии и идентичности
-лица (unpaired image-to-image translation).
+There are two sets of face images with no paired correspondence: domain **A** —
+real photos (CelebA), domain **B** — anime faces (safebooru). The goal is to learn
+a mapping `T: A → B` that transfers a photo into anime style while preserving face
+geometry and identity (unpaired image-to-image translation).
 
-### Данные
+### Data
 
-- **CelebA** — публичный датасет лиц (~200k изображений). Используется выровненная
-  версия `img_align_celeba`; домен A дополнительно фильтруется по полу (women-only)
-  по `list_attr_celeba.csv`.
-- **AlignedAnimeFaces (safebooru)** — ~500k предварительно выровненных аниме-лиц.
-- Оба домена приводятся к квадрату `128×128`: реальные лица — выравниванием по
-  ключевым точкам (MediaPipe), аниме — центральным кропом. В каждом домене выделен
-  held-out тест.
+- **CelebA** — a public face dataset (~200k images). The aligned `img_align_celeba`
+  version is used; domain A is additionally filtered to women only via
+  `list_attr_celeba.csv`.
+- **AlignedAnimeFaces (safebooru)** — ~500k pre-aligned anime faces.
+- Both domains are normalized to a `128×128` square: real faces by landmark
+  alignment (MediaPipe), anime faces by a center crop. Each domain has a held-out
+  test split.
 
-Данные версионируются через **DVC** и в git не хранятся. Для быстрой проверки есть
-**демо-выборка** (~800 МБ, 3000/3000 train + 500/500 test), которая скачивается
-автоматически; полный датасет (~100 ГБ) загружается из открытых источников по
-запросу (см. [Данные](#данные-1)).
+Data is versioned with **DVC** and never stored in git. A small **demo subset**
+(~800 MB, 3000/3000 train + 500/500 test) is downloaded automatically for quick
+checks; the full dataset (~100 GB) is fetched from open sources on demand
+(see [Data](#data-1)).
 
-### Метод
+### Method
 
-NOT (strong OT) обучает пару сетей: транспорт `T` (UNet) переносит A в B, потенциал
-Канторовича `f` (ResNet без BatchNorm) их различает.
+NOT (strong OT) trains two networks: a transport map `T` (UNet) that moves A to B,
+and a Kantorovich potential `f` (a ResNet without BatchNorm) that tells them apart.
 
 ```
-T_loss = MSE(X, T(X)) − f(T(X))      # на каждый шаг f делается t_iters шагов T
+T_loss = MSE(X, T(X)) − f(T(X))      # t_iters T-steps per one f-step
 f_loss = f(T(X))      − f(Y)
 ```
 
-Слагаемое `MSE(X, T(X))` штрафует сильные изменения пикселей, поэтому транспорт
-получается «дешёвым» и cycle-consistency не нужна. Качество переноса отслеживается
-метрикой **FID** во время обучения.
+The `MSE(X, T(X))` term penalizes large pixel changes, so the transport stays
+"cheap" and no cycle-consistency is needed. Translation quality is tracked with the
+**FID** metric during training.
 
-### Используемые библиотеки
+### Libraries
 
 [PyTorch](https://pytorch.org/) + [PyTorch Lightning](https://lightning.ai/) —
-модели и цикл обучения; [Hydra](https://hydra.cc/) — конфиги;
-[MLflow](https://mlflow.org/) — трекинг экспериментов;
-[DVC](https://dvc.org/) — версионирование данных и моделей;
+models and training loop; [Hydra](https://hydra.cc/) — configuration;
+[MLflow](https://mlflow.org/) — experiment tracking;
+[DVC](https://dvc.org/) — data and model versioning;
 [torchmetrics](https://lightning.ai/docs/torchmetrics/) — FID;
-[MediaPipe](https://developers.google.com/mediapipe) — выравнивание лиц.
+[MediaPipe](https://developers.google.com/mediapipe) — face alignment.
 
-## Технические детали
+## Technical details
 
 ### Setup
 
-Проект использует менеджер пакетов [uv](https://docs.astral.sh/uv/); PyTorch
-ставится из индекса CUDA 12.8 (см. `pyproject.toml`).
+The project uses the [uv](https://docs.astral.sh/uv/) package manager; PyTorch is
+installed from the CUDA 12.8 index (see `pyproject.toml`).
 
 ```bash
-uv sync                    # окружение + все зависимости (включая PyTorch)
-uv sync --group dev        # dev-инструменты (pytest, jupyter, pre-commit)
-uv run pre-commit install  # git-хуки
+uv sync                    # environment + all dependencies (including PyTorch)
+uv sync --group dev        # dev tools (pytest, jupyter, pre-commit)
+uv run pre-commit install  # git hooks
 ```
 
-Python всегда вызывается через `uv run python ...`.
+Always invoke Python via `uv run python ...`.
 
-### Данные
+### Data
 
-Датасет скачивается автоматически: `train.py`/`infer.py` вызывают `ensure_data()`,
-который при отсутствии данных загружает нужную выборку.
+The dataset is fetched automatically: `train.py`/`infer.py` call `ensure_data()`,
+which downloads the required split if it is missing.
 
-- **demo** (по умолчанию, `data.variant=demo`) — публичный `demo.zip` качается с
-  Google Drive через `gdown` без аутентификации и распаковывается в `data/demo/`.
+- **demo** (default, `data.variant=demo`) — a public `demo.zip` is downloaded from
+  Google Drive via `gdown` with no authentication and unpacked into `data/demo/`.
 - **full** (`data.variant=full`) — CelebA (`gdown`) + AlignedAnimeFaces (Kaggle API,
-  нужен `~/.kaggle/kaggle.json`), затем раскладка `scripts/prepare_dataset.py`.
-  Чтобы не качать 100 ГБ повторно, можно указать уже существующие пути:
+  requires `~/.kaggle/kaggle.json`), then laid out by `scripts/prepare_dataset.py`.
+  To avoid re-downloading 100 GB, point at existing paths:
 
   ```bash
   uv run python train.py data.variant=full data.root_a=<celeba_dir> data.root_b=<anime_dir>
@@ -84,27 +84,27 @@ Python всегда вызывается через `uv run python ...`.
 
 ### Train
 
-Единая точка входа — `train.py`; модель выбирается параметром `model_type`.
+Single entry point — `train.py`; the model is selected by `model_type`.
 
 ```bash
-uv run python train.py                      # NOT (по умолчанию)
+uv run python train.py                      # NOT (default)
 uv run python train.py model_type=cyclegan  # CycleGAN
 ```
 
-Любой гиперпараметр переопределяется через Hydra-CLI:
+Any hyperparameter can be overridden via the Hydra CLI:
 
 ```bash
 uv run python train.py not_.t_iters=5 not_.t_lr=5e-5 data.batch_size=32
 ```
 
-Метрики, гиперпараметры и графики обучения логируются в MLflow (адрес — в конфиге,
-по умолчанию `http://127.0.0.1:8080`; локальный сервер: `uv run mlflow server
---host 127.0.0.1 --port 8080`).
+Metrics, hyperparameters, and training curves are logged to MLflow (address is set
+in the config, default `http://127.0.0.1:8080`; local server:
+`uv run mlflow server --host 127.0.0.1 --port 8080`).
 
 ### Infer
 
-Точка входа — `infer.py`: принимает чекпойнт и изображение (или директорию),
-сохраняет переносы в выходную папку.
+Entry point — `infer.py`: takes a checkpoint and an image (or a directory) and
+writes the translations to an output folder.
 
 ```bash
 uv run python infer.py \
@@ -113,33 +113,33 @@ uv run python infer.py \
     eval.output_dir=outputs/eval
 ```
 
-Вход — изображения `.jpg/.png/.webp/.bmp`; флаг `eval.align=true` включает
-предварительное выравнивание лица.
+Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true` enables face alignment
+before translation.
 
-### Overall — структура проекта
+### Overall — project structure
 
 ```
 kaoanime-selfie2anime/
-├── kaoanime/                # основной Python-пакет
-│   ├── models/              # строительные блоки сетей (ResNet, UNet, PatchGAN, NOT-потенциал)
-│   ├── losses/              # лоссы CycleGAN
-│   ├── data/                # скачивание датасета (demo/full) и пути
-│   ├── utils/               # датасеты, трансформы, выравнивание, FID
-│   ├── inference/           # пайплайн инференса
-│   ├── callbacks.py         # MLflow-чекпойнт-callback
-│   ├── config*.py           # Hydra-конфиги (общий + NOT + CycleGAN)
-│   ├── model_not.py         # LightningModule NOT
-│   └── model_cyclegan.py    # LightningModule CycleGAN
+├── kaoanime/                # main Python package
+│   ├── models/              # network building blocks (ResNet, UNet, PatchGAN, NOT potential)
+│   ├── losses/              # CycleGAN losses
+│   ├── data/                # dataset download (demo/full) and paths
+│   ├── utils/               # datasets, transforms, alignment, FID
+│   ├── inference/           # inference pipeline
+│   ├── callbacks.py         # MLflow checkpoint callback
+│   ├── config*.py           # Hydra configs (shared + NOT + CycleGAN)
+│   ├── model_not.py         # NOT LightningModule
+│   └── model_cyclegan.py    # CycleGAN LightningModule
 ├── scripts/                 # prepare_dataset, export_models, align_dataset
-├── notebooks/               # исследовательские ноутбуки
-├── tests/                   # pytest-тесты
-├── train.py · infer.py · eval.py   # CLI точки входа
-├── pyproject.toml · uv.lock        # зависимости
-└── .pre-commit-config.yaml         # хуки качества кода
+├── notebooks/               # exploratory notebooks
+├── tests/                   # pytest tests
+├── train.py · infer.py · eval.py   # CLI entry points
+├── pyproject.toml · uv.lock        # dependencies
+└── .pre-commit-config.yaml         # code-quality hooks
 ```
 
-### Инференс и поставка
+### Inference & delivery
 
-Обученная модель сохраняется как Lightning-чекпойнт (`.ckpt`) и логируется в MLflow.
-Лучшие чекпойнты публикуются в DVC-remote `models` командой
-`scripts/export_models.py`. Экспорт в ONNX/TensorRT и inference-сервер — в планах.
+A trained model is saved as a Lightning checkpoint (`.ckpt`) and logged to MLflow.
+The best checkpoints are published to the DVC `models` remote via
+`scripts/export_models.py`. ONNX/TensorRT export and an inference server are planned.
