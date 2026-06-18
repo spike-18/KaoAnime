@@ -2101,7 +2101,7 @@ wheels = [
 [[package]]
 name = "kaoanime"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "dvc", extra = ["gdrive"] },
     { name = "fire" },
