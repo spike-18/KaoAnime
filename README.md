@@ -96,15 +96,32 @@ uv run pytest
 
 ### Данные (DVC)
 
-Данные и обученные модели не хранятся в git — они версионируются через DVC.
-Получить датасет:
+Данные и модели версионируются через DVC на двух Google Drive remote
+(`data` — демо-датасет, `models` — обученные модели), в git не хранятся.
+
+Демо-датасет (по умолчанию, `data.variant=demo`) скачивается автоматически:
+`train.py`/`infer.py` вызывают `ensure_data()`, который при отсутствии данных
+делает `dvc pull`. Вручную:
 
 ```bash
-uv run dvc pull
+uv run dvc pull -r data data/demo
 ```
 
-После этого данные появятся в директории `data/`. Скачивание данных также
-встроено в команды train и infer (см. ниже).
+Полный датасет (`data.variant=full`) скачивается `download_data()`: CelebA через
+`gdown`, AlignedAnimeFaces через Kaggle API (нужен `~/.kaggle/kaggle.json`).
+Раскладка по директориям — `scripts/prepare_dataset.py`. Чтобы не качать 100 ГБ
+заново, можно указать существующие пути:
+
+```bash
+uv run python train.py data.variant=full \
+    data.root_a=<celeba_dir> data.root_b=<anime_dir>
+```
+
+Экспорт лучших моделей в remote `models` (сохраняет `.pt` и пушит в DVC):
+
+```bash
+uv run python scripts/export_models.py --checkpoints checkpoints/not_ep10.ckpt
+```
 
 ### Train
 
