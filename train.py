@@ -10,6 +10,7 @@ from kaoanime.data import ensure_data
 from kaoanime.model_cyclegan import KaoAnimeModel
 from kaoanime.model_not import NOTModel
 from kaoanime.utils import UnpairedImageDataset, create_dataloader
+from kaoanime.utils.git import get_git_commit
 
 torch.set_float32_matmul_precision("medium")
 register_configs()
@@ -89,6 +90,11 @@ def main(cfg: Config) -> None:
             ],
         )
         ckpt_path = cfg.train.resume_from_checkpoint or None
+
+    # Record the code revision the run was launched from (reproducibility).
+    logger.experiment.set_tag(
+        logger.run_id, "mlflow.source.git.commit", get_git_commit()
+    )
 
     trainer.fit(model, train_dl, ckpt_path=ckpt_path)
 
