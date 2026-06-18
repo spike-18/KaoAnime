@@ -40,12 +40,14 @@ packaging" requirement:
 2. **TensorRT = shell script** `scripts/export_tensorrt.sh` wrapping
    `trtexec --onnx=… --fp16 --saveEngine=…`. Documented; not executed here;
    `tensorrt` is **not** a project dependency.
-3. **Torch-free production path** in a new `kaoanime/serving/` package:
-   numpy/cv2/PIL preprocessing (reusing `AlignFaceProcessor` for optional
-   alignment). No torch/lightning imports. The onnxruntime session is created
-   inline in `infer_onnx.py` (a 3-line call — no wrapper module).
-4. **Production inference entry point** `infer_onnx.py` at repo root (public API),
-   using `kaoanime.serving` + onnxruntime only.
+3. **ONNX inference = a single script** `scripts/infer_onnx.py` (fire CLI) holding
+   its own numpy/cv2/PIL preprocessing + postprocessing and an inline
+   `onnxruntime.InferenceSession`. No separate `serving` package/module.
+4. **Light by default.** With `align=False` (default) the script imports only
+   onnxruntime / numpy / opencv / pillow — no torch. Alignment reuses
+   `AlignFaceProcessor`, which is **lazy-imported only when `align=True`** (that
+   import path transitively pulls the project's torch stack via
+   `kaoanime/utils/__init__.py`, acceptable for the optional alignment path).
 5. Existing `infer.py` (torch/Lightning, checkpoint-based) stays unchanged for
    development use.
 
@@ -78,40 +80,41 @@ trtexec --onnx="$1" --fp16 --saveEngine="$2" \
 
 Documented in README; requires TensorRT installed on the target machine.
 
-### `kaoanime/serving/` (torch-free)
+### `scripts/infer_onnx.py` (fire CLI)
 
-- `preprocess.py`
-  - `preprocess_image(path, image_size=128, align=False) -> np.ndarray` →
-    `(1, 3, image_size, image_size)` float32 in `[-1, 1]`. Steps: load (PIL/cv2),
-    optional `AlignFaceProcessor` align (fallback to center-crop on no-face),
-    resize to `image_size`, scale to `[-1, 1]`, HWC→CHW, add batch dim. Must match
-    `transforms.get_transforms("test")` numerically.
-  - `postprocess(array) -> np.ndarray` → `(H, W, 3)` uint8 from `(1|.,3,H,W)` in
-    `[-1, 1]`.
+Self-contained ONNX inference. Functions live in this file (importable as
+`scripts.infer_onnx` for tests):
 
-No module here imports torch. `kaoanime/__init__.py` must stay import-light (verify
-it does not pull torch) so `import kaoanime.serving…` is torch-free.
+- `preprocess_image(path, image_size=128, align=False) -> np.ndarray` →
+  `(1, 3, image_size, image_size)` float32 in `[-1, 1]`. Steps: load (PIL),
+  if `align` lazy-import `AlignFaceProcessor` and align (fallback to plain resize
+  on no-face), resize to `(image_size, image_size)` (matches `v2.Resize`, no crop),
+  scale to `[-1, 1]`, HWC→CHW, add batch dim. Approx-matches
+  `transforms.get_transforms("test")`.
+- `postprocess(array) -> np.ndarray` → `(H, W, 3)` uint8 from `(1, 3, H, W)` in
+  `[-1, 1]`.
+- `main(onnx, input, output_dir, image_size=128, align=False)`: create one
+  `onnxruntime.InferenceSession(onnx)`, iterate input file/dir →
+  `preprocess_image` → `session.run(None, {"input": arr})[0]` → `postprocess` →
+  save. `if __name__ == "__main__": fire.Fire(main)`.
 
-### `infer_onnx.py` (repo root, public API)
-
-fire CLI `main(onnx, input, output_dir, image_size=128, align=False)`: create one
-`onnxruntime.InferenceSession(onnx)`, then iterate input file/dir →
-`preprocess_image` → `session.run` → `postprocess` → save. Depends only on
-`kaoanime.serving`, onnxruntime, numpy, cv2/PIL, mediapipe.
+Top-level imports: onnxruntime, numpy, PIL, pathlib, fire. The torch stack is
+**not** imported unless `align=True` is used.
 
 ### Delivery bundle (README "Production preparation")
 
-`model.onnx` + `models/face_landmarker.task` + `kaoanime/serving/` +
-runtime deps `onnxruntime, opencv-python, mediapipe, numpy, pillow`. Optionally a
-TensorRT `.engine` built on the target via `export_tensorrt.sh`.
+`model.onnx` + `scripts/infer_onnx.py` (+ `models/face_landmarker.task` and
+`kaoanime/utils/align.py` only if alignment is used). Default runtime deps:
+`onnxruntime, numpy, pillow`; alignment adds `opencv-python, mediapipe`. Optionally
+a TensorRT `.engine` built on the target via `export_tensorrt.sh`.
 
 ## Data Flow
 
-| Step   | Command                                                                         |
-| ------ | ------------------------------------------------------------------------------- |
-| Export | `uv run python scripts/export_onnx.py --checkpoint <ckpt> --out model.onnx`     |
-| TRT    | `bash scripts/export_tensorrt.sh model.onnx model.engine` (target machine)      |
-| Serve  | `uv run python infer_onnx.py --onnx model.onnx --input <path> --output-dir out` |
+| Step   | Command                                                                                 |
+| ------ | --------------------------------------------------------------------------------------- |
+| Export | `uv run python scripts/export_onnx.py --checkpoint <ckpt> --out model.onnx`             |
+| TRT    | `bash scripts/export_tensorrt.sh model.onnx model.engine` (target machine)              |
+| Serve  | `uv run python scripts/infer_onnx.py --onnx model.onnx --input <path> --output-dir out` |
 
 ## Error Handling
 
@@ -123,11 +126,13 @@ TensorRT `.engine` built on the target via `export_tensorrt.sh`.
 
 - `export_onnx`: on a tiny `NOTModel` (small `t_filters`) export to a temp path and
   assert the file exists and onnxruntime output matches PyTorch within tolerance.
-- `serving.preprocess`: `preprocess_image` output shape `(1,3,128,128)`, dtype
-  float32, range within `[-1, 1]`. Parity against `transforms.get_transforms("test")`
-  on a sample image is **approximate** (PIL/numpy resize ≠ torchvision resize
-  bit-for-bit): assert mean abs diff < ~2e-2, not exact equality.
-- `serving.postprocess`: round-trips `[-1,1]` → uint8 correctly (shape/range).
+- `infer_onnx.preprocess_image`: output shape `(1,3,128,128)`, dtype float32, range
+  within `[-1, 1]`. Parity against `transforms.get_transforms("test")` on a sample
+  image is **approximate** (PIL/numpy resize ≠ torchvision resize bit-for-bit):
+  assert mean abs diff < ~2e-2, not exact equality.
+- `infer_onnx.postprocess`: round-trips `[-1,1]` → uint8 correctly (shape/range).
+- `import scripts.infer_onnx` must not import torch (assert `"torch" not in
+sys.modules` after a fresh import in a subprocess, with `align` unused).
 - All external-free (no network); torch used only to build the parity reference.
 
 ## Out of Scope
