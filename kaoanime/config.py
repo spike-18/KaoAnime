@@ -9,12 +9,11 @@ from kaoanime.config_not import NOTConfig
 
 @dataclass
 class DataConfig:
-    root_a: str = (
-        "/beta/students/madorskii/datasets/CelebA/img_align_celeba/img_align_celeba"
-    )
-    root_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/safebooru_jpeg"
-    test_a: str = "/beta/students/madorskii/datasets/CelebA/test"
-    test_b: str = "/beta/students/madorskii/datasets/alignedanimefaces/test"
+    variant: str = "demo"  # "demo" (DVC-tracked sample) or "full" (downloaded)
+    root_a: str = "data/${data.variant}/trainA"
+    root_b: str = "data/${data.variant}/trainB"
+    test_a: str = "data/${data.variant}/testA"
+    test_b: str = "data/${data.variant}/testB"
     extra_roots_a: list[str] = field(default_factory=list)
     extra_roots_b: list[str] = field(default_factory=list)
     batch_size: int = 64
