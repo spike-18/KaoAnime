@@ -27,7 +27,7 @@ def main(cfg: Config) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cls = NOTModel if cfg.model_type == "not" else KaoAnimeModel
     model = cls.load_from_checkpoint(
-        cfg.eval.checkpoint, cfg=cfg, map_location=device, strict=False
+        cfg.eval.checkpoint, cfg=cfg, map_location=device, strict=True
     )
     model.to(device).float()
     model.eval()

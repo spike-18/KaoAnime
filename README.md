@@ -113,6 +113,8 @@ uv run python infer.py \
     eval.output_dir=outputs/eval
 ```
 
+The checkpoint is loaded strictly, so its UNet normalization must match the config:
+add `not_.t_norm=instance` for the provided checkpoints (trained with InstanceNorm).
 Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true` enables face alignment
 before translation.
 
@@ -160,6 +162,9 @@ uv run python scripts/export_onnx.py \
 normalization must match how the checkpoint was trained: pass `--t-norm instance`
 for the provided checkpoints (trained with InstanceNorm); the default `batch`
 matches models trained with the current code.
+
+Pre-exported models (`.pt` / `.onnx`) are published to the DVC `models` remote
+(Google Drive) — see `.dvc/config`.
 
 Optionally build a **TensorRT** FP16 engine on a machine with TensorRT installed:
 
