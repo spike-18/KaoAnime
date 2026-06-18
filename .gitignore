@@ -8,4 +8,8 @@ wheels/
 
 # Virtual environments
 .venv
-/data
+
+# Data: ignore contents, but keep DVC pointers tracked
+/data/*
+!/data/*.dvc
+!/data/.gitignore
