@@ -108,11 +108,11 @@ TensorRT `.engine` built on the target via `export_tensorrt.sh`.
 
 ## Data Flow
 
-| Step   | Command                                                                     |
-| ------ | --------------------------------------------------------------------------- | ---------------------- |
-| Export | `uv run python scripts/export_onnx.py --checkpoint <ckpt> --out model.onnx` |
-| TRT    | `bash scripts/export_tensorrt.sh model.onnx model.engine` (target machine)  |
-| Serve  | `uv run python infer_onnx.py --onnx model.onnx --input <img                 | dir> --output-dir out` |
+| Step   | Command                                                                         |
+| ------ | ------------------------------------------------------------------------------- |
+| Export | `uv run python scripts/export_onnx.py --checkpoint <ckpt> --out model.onnx`     |
+| TRT    | `bash scripts/export_tensorrt.sh model.onnx model.engine` (target machine)      |
+| Serve  | `uv run python infer_onnx.py --onnx model.onnx --input <path> --output-dir out` |
 
 ## Error Handling
 
