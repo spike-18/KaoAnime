@@ -1,0 +1,41 @@
+name: "kaoanime"
+platform: "ensemble"
+max_batch_size: 8
+
+input [
+  {
+    name: "IMAGE"
+    data_type: TYPE_STRING
+    dims: [ 1 ]
+  }
+]
+output [
+  {
+    name: "OUTPUT_IMAGE"
+    data_type: TYPE_UINT8
+    dims: [ 128, 128, 3 ]
+  }
+]
+
+ensemble_scheduling {
+  step [
+    {
+      model_name: "preprocess"
+      model_version: -1
+      input_map { key: "IMAGE" value: "IMAGE" }
+      output_map { key: "input" value: "preprocessed" }
+    },
+    {
+      model_name: "transport"
+      model_version: -1
+      input_map { key: "input" value: "preprocessed" }
+      output_map { key: "output" value: "transported" }
+    },
+    {
+      model_name: "postprocess"
+      model_version: -1
+      input_map { key: "output" value: "transported" }
+      output_map { key: "OUTPUT_IMAGE" value: "OUTPUT_IMAGE" }
+    }
+  ]
+}

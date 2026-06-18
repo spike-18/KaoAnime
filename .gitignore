@@ -43,6 +43,10 @@ wheels/
 *.cbm
 *.h5
 *.npz
+*.onnx.data
+
+# Triton: ONNX copied into the model repository at setup (keep configs + .py)
+/triton/model_repository/transport/1/model.onnx
 
 # Course material (not part of the deliverable)
 Требования к проекту.md

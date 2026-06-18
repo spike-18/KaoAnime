@@ -37,6 +37,11 @@ dev = [
     "pre-commit>=4.6.0",
     "pytest>=8.0.0",
 ]
+# Triton test client (torch-free): `uv sync --group serve`.
+serve = [
+    "tritonclient[http]>=2.40",
+    "pillow>=10.0",
+]
 
 [tool.uv.sources]
 torch = { index = "pytorch" }

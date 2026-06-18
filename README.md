@@ -186,5 +186,37 @@ bash scripts/export_tensorrt.sh models/export/last.onnx models/export/last.engin
 **Delivery bundle:** `last.onnx` (+ `last.onnx.data`) + `scripts/infer_onnx.py`.
 Alignment is optional and additionally needs `models/face_landmarker.task` +
 `kaoanime/utils/align.py`. Default runtime deps are `onnxruntime, numpy, pillow`
-(alignment adds `opencv-python, mediapipe`) — no torch/lightning. A Triton
-inference server is planned next.
+(alignment adds `opencv-python, mediapipe`) — no torch/lightning.
+
+### Inference server (Triton)
+
+The model is served as a **Triton ensemble** (`triton/model_repository/`) that runs
+the full pipeline on the server:
+
+```
+kaoanime (ensemble)
+  ├─ preprocess   (Python backend)  raw image bytes -> normalised NCHW float
+  ├─ transport    (onnxruntime, CPU) the exported transport map
+  └─ postprocess  (Python backend)  [-1,1] CHW float -> uint8 HWC image
+```
+
+Each step has a `config.pbtxt`; the ensemble wiring is in
+`triton/model_repository/kaoanime/config.pbtxt`. The ONNX is copied into
+`transport/1/` at setup (not committed — pulled via `ensure_model`/DVC).
+
+Build and serve (onnxruntime CPU, no GPU needed):
+
+```bash
+bash triton/run_server.sh        # populate repo + docker build + serve
+# HTTP :8000 · gRPC :8001 · metrics :8002
+```
+
+Query it with the test client (deps: `uv sync --group serve`, torch-free):
+
+```bash
+uv run python triton/client.py --input data/demo/testA --output_dir outputs/triton
+```
+
+The client sends raw image bytes to the `kaoanime` ensemble and saves the returned
+RGB images. Override the Triton base image tag with `TRITON_TAG=<tag>` — use a full
+`-py3` tag (the `-py3-min` image has no backends and cannot serve the models).
