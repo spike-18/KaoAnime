@@ -211,12 +211,21 @@ bash triton/run_server.sh        # populate repo + docker build + serve
 # HTTP :8000 · gRPC :8001 · metrics :8002
 ```
 
-Query it with the test client (deps: `uv sync --group serve`, torch-free):
+Query it with the test client (deps: `uv sync --group serve`, torch-free). It takes
+one or more image files (or a directory) and saves the anime-domain results:
 
 ```bash
-uv run python triton/client.py --input data/demo/testA --output_dir outputs/triton
+# bundled demo selfies -> outputs/examples/
+uv run python triton/client.py examples
+
+# a single file or a specific set
+uv run python triton/client.py examples/selfie_1.jpg examples/selfie_2.jpg
+
+# any directory, custom output dir
+uv run python triton/client.py data/demo/testA --output_dir outputs/triton
 ```
 
-The client sends raw image bytes to the `kaoanime` ensemble and saves the returned
-RGB images. Override the Triton base image tag with `TRITON_TAG=<tag>` — use a full
-`-py3` tag (the `-py3-min` image has no backends and cannot serve the models).
+A few sample selfies live in `examples/` for a quick demo. The client sends raw
+image bytes to the `kaoanime` ensemble and saves the returned RGB images. Override
+the Triton base image tag with `TRITON_TAG=<tag>` — use a full `-py3` tag (the
+`-py3-min` image has no backends and cannot serve the models).
