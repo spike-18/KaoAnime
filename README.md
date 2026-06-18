@@ -96,15 +96,19 @@ uv run pytest
 
 ### Данные (DVC)
 
-Данные и модели версионируются через DVC на двух Google Drive remote
-(`data` — демо-датасет, `models` — обученные модели), в git не хранятся.
+Данные версионируются через DVC (`data/demo.dvc`), в git не хранятся. Сам датасет
+лежит на Google Drive: демо — в публичной папке `data`, обученные модели — в папке
+`models`.
 
-Демо-датасет (по умолчанию, `data.variant=demo`) скачивается автоматически:
-`train.py`/`infer.py` вызывают `ensure_data()`, который при отсутствии данных
-делает `dvc pull`. Вручную:
+Демо-датасет (по умолчанию, `data.variant=demo`) скачивается автоматически без
+какой-либо аутентификации: `train.py`/`infer.py` вызывают `ensure_data()`, который
+при отсутствии данных тянет публичный `demo.zip` с Google Drive через `gdown` и
+распаковывает в `data/demo/`. Id файла задаётся в конфиге (`data.demo_gdrive_id`).
+Вручную можно скачать тем же путём:
 
 ```bash
-uv run dvc pull -r data data/demo
+uv run python -c "from kaoanime.data import download_data; \
+    download_data('demo', demo_gdrive_id='<DEMO_ZIP_ID>')"
 ```
 
 Полный датасет (`data.variant=full`) скачивается `download_data()`: CelebA через

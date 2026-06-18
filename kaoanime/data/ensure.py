@@ -8,4 +8,4 @@ def ensure_data(cfg) -> None:
     """Download the dataset if any required split directory is missing."""
     missing = [d for d in required_data_dirs(cfg) if not d.is_dir()]
     if missing:
-        download_data(cfg.data.variant)
+        download_data(cfg.data.variant, demo_gdrive_id=cfg.data.demo_gdrive_id)

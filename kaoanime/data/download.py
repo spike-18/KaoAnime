@@ -1,13 +1,23 @@
 from __future__ import annotations
 
+import zipfile
 from pathlib import Path
 
 
-def _dvc_pull(remote: str, targets: list[str] | None = None) -> None:
-    from dvc.repo import Repo
+def _download_demo_zip(gdrive_id: str, dest: Path) -> None:
+    """Download the public demo.zip from Google Drive (no auth) and unzip it.
 
-    with Repo() as repo:
-        repo.pull(remote=remote, targets=targets)
+    The archive contains a top-level ``demo/`` directory, so extracting into
+    ``dest`` yields ``dest/demo/{trainA,trainB,testA,testB}``.
+    """
+    import gdown
+
+    dest.mkdir(parents=True, exist_ok=True)
+    zip_path = dest / "demo.zip"
+    gdown.download(id=gdrive_id, output=str(zip_path), quiet=False)
+    with zipfile.ZipFile(zip_path) as archive:
+        archive.extractall(dest)
+    zip_path.unlink()
 
 
 def _download_anime(dest: Path) -> None:
@@ -47,14 +57,19 @@ def _layout_full(dest: Path) -> None:
     )
 
 
-def download_data(variant: str, dest: str = "data") -> None:
+def download_data(variant: str, dest: str = "data", demo_gdrive_id: str = "") -> None:
     """Fetch the dataset for the given variant.
 
-    demo -> `dvc pull` the demo dataset from the `data` remote.
+    demo -> download the public demo.zip from Google Drive (gdown, no auth).
     full -> download CelebA (gdown) + AlignedAnimeFaces (kaggle), then lay out.
     """
     if variant == "demo":
-        _dvc_pull("data", targets=["data/demo"])
+        if not demo_gdrive_id:
+            raise ValueError(
+                "demo_gdrive_id is required for the demo variant; set "
+                "cfg.data.demo_gdrive_id to the public demo.zip Google Drive file id."
+            )
+        _download_demo_zip(demo_gdrive_id, Path(dest))
         return
     if variant == "full":
         dest_path = Path(dest)

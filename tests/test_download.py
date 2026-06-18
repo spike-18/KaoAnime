@@ -3,16 +3,19 @@ import pytest
 from kaoanime.data import download_data
 
 
-def test_demo_calls_dvc_pull(monkeypatch):
-    calls = {}
+def test_demo_downloads_zip(monkeypatch, tmp_path):
+    seen = {}
+    monkeypatch.setattr(
+        "kaoanime.data.download._download_demo_zip",
+        lambda gdrive_id, dest: seen.update(id=gdrive_id, dest=str(dest)),
+    )
+    download_data("demo", dest=str(tmp_path), demo_gdrive_id="ABC123")
+    assert seen["id"] == "ABC123"
 
-    def fake_pull(remote, targets):
-        calls["remote"] = remote
-        calls["targets"] = targets
 
-    monkeypatch.setattr("kaoanime.data.download._dvc_pull", fake_pull)
-    download_data("demo")
-    assert calls["remote"] == "data"
+def test_demo_requires_gdrive_id():
+    with pytest.raises(ValueError):
+        download_data("demo", demo_gdrive_id="")
 
 
 def test_full_invokes_kaggle_and_gdown(monkeypatch, tmp_path):
