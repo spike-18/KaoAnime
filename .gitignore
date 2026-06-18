@@ -13,3 +13,32 @@ wheels/
 /data/*
 !/data/*.dvc
 !/data/.gitignore
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Training artifacts & experiment outputs
+/checkpoints/
+/lightning_logs/
+/outputs/
+/mlruns/
+/mlartifacts/
+# Stray local MLflow file-store experiment dir
+/2/
+
+# Model & data binaries — never commit, use DVC (.dvc pointers stay tracked)
+*.ckpt
+*.pt
+*.pth
+*.onnx
+*.engine
+*.plan
+*.task
+*.cbm
+*.h5
+*.npz
+
+# Course material (not part of the deliverable)
+Требования к проекту.md
