@@ -3,6 +3,7 @@ import torch
 import hydra
 
 from kaoanime.config import Config, register_configs
+from kaoanime.data import ensure_data
 from kaoanime.inference import run_inference
 from kaoanime.model_cyclegan import KaoAnimeModel
 from kaoanime.model_not import NOTModel
@@ -20,6 +21,8 @@ def main(cfg: Config) -> None:
         raise ValueError(
             "eval.input must be specified, e.g.: eval.input=data/selfie2anime/testA"
         )
+
+    ensure_data(cfg)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     cls = NOTModel if cfg.model_type == "not" else KaoAnimeModel

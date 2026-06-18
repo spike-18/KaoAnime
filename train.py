@@ -6,6 +6,7 @@ from lightning.pytorch.loggers import MLFlowLogger
 
 from kaoanime.callbacks import MLflowCheckpointCallback
 from kaoanime.config import Config, register_configs
+from kaoanime.data import ensure_data
 from kaoanime.model_cyclegan import KaoAnimeModel
 from kaoanime.model_not import NOTModel
 from kaoanime.utils import UnpairedImageDataset, create_dataloader
@@ -26,6 +27,7 @@ def _make_model(cfg: Config) -> pl.LightningModule:
 
 @hydra.main(version_base=None, config_path=None, config_name="config")
 def main(cfg: Config) -> None:
+    ensure_data(cfg)
     dataset = UnpairedImageDataset(
         cfg.data.root_a,
         cfg.data.root_b,
