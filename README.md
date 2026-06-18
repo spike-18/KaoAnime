@@ -226,6 +226,8 @@ uv run python triton/client.py data/demo/testA --output_dir outputs/triton
 ```
 
 A few sample selfies live in `examples/` for a quick demo. The client sends raw
-image bytes to the `kaoanime` ensemble and saves the returned RGB images. Override
-the Triton base image tag with `TRITON_TAG=<tag>` — use a full `-py3` tag (the
-`-py3-min` image has no backends and cannot serve the models).
+image bytes to the `kaoanime` ensemble and saves the returned RGB images with an
+`_anime` suffix (e.g. `selfie_1.jpg` -> `selfie_1_anime.jpg`) so results never
+clash with the inputs (`--suffix` to change). Override the Triton base image tag
+with `TRITON_TAG=<tag>` — use a full `-py3` tag (the `-py3-min` image has no
+backends and cannot serve the models).

@@ -60,6 +60,7 @@ def _infer_one(client: httpclient.InferenceServerClient, data: bytes) -> np.ndar
 def main(
     *inputs: str,
     output_dir: str = "outputs/examples",
+    suffix: str = "_anime",
     url: str = "localhost:8000",
 ) -> None:
     if not inputs:
@@ -82,7 +83,8 @@ def main(
 
     for image_path in paths:
         result = _infer_one(client, image_path.read_bytes())
-        dst = out_dir / image_path.name
+        # Tag the output name so anime results never clash with the inputs.
+        dst = out_dir / f"{image_path.stem}{suffix}{image_path.suffix}"
         Image.fromarray(result).save(dst)
         print(f"  {image_path} -> {dst}")
     print(f"Saved {len(paths)} image(s) to {out_dir}")
