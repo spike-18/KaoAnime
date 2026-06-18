@@ -13,6 +13,7 @@ from pathlib import Path
 import fire
 import numpy as np
 import torch
+from torch.export import Dim
 
 from kaoanime.config import Config
 from kaoanime.model_not import NOTModel
@@ -35,9 +36,7 @@ def _verify_parity(
         )
 
 
-def export_module(
-    transport: torch.nn.Module, out: str, image_size: int = 128, opset: int = 17
-) -> str:
+def export_module(transport: torch.nn.Module, out: str, image_size: int = 128) -> str:
     """Export a transport module to ONNX (dynamic batch) and verify parity."""
     transport.eval()
     out_path = Path(out)
@@ -45,36 +44,54 @@ def export_module(
     dummy = torch.randn(1, 3, image_size, image_size)
     torch.onnx.export(
         transport,
-        dummy,
+        (dummy,),
         str(out_path),
         input_names=["input"],
         output_names=["output"],
-        dynamic_axes={"input": {0: "batch"}, "output": {0: "batch"}},
-        opset_version=opset,
-        dynamo=False,  # legacy exporter; the dynamo path needs the onnxscript dep
+        dynamic_shapes={"x": {0: Dim("batch")}},  # UNetGenerator.forward(self, x)
+        dynamo=True,
     )
     _verify_parity(transport, str(out_path), image_size)
     return str(out_path)
+
+
+def _load_transport(checkpoint: str, t_filters: int, t_norm: str) -> torch.nn.Module:
+    """Build NOTModel from cfg, load the checkpoint, and verify T loaded fully.
+
+    Loads non-strictly (the checkpoint also carries `f`/`fid` we ignore) but fails
+    loudly if any transport (`T.*`) weight is missing — that means the checkpoint
+    architecture does not match (e.g. wrong `t_norm` or `t_filters`).
+    """
+    cfg = Config()
+    cfg.not_.t_filters = t_filters
+    cfg.not_.t_norm = t_norm
+    model = NOTModel(cfg)
+    state = torch.load(checkpoint, map_location="cpu", weights_only=False)["state_dict"]
+    result = model.load_state_dict(state, strict=False)
+    missing_t = [key for key in result.missing_keys if key.startswith("T.")]
+    if missing_t:
+        raise ValueError(
+            f"Checkpoint does not match the model: {len(missing_t)} transport (T.*) "
+            f"weights missing, e.g. {missing_t[:3]}. Try a different --t_norm "
+            f"(instance/batch) or --t_filters to match how the checkpoint was trained."
+        )
+    model.eval()
+    return model.T
 
 
 def export(
     checkpoint: str,
     out: str = "models/export/model.onnx",
     t_filters: int = 48,
+    t_norm: str = "batch",
     image_size: int = 128,
-    opset: int = 17,
 ) -> str:
     """Load a NOT checkpoint and export its transport map T to ONNX."""
     ckpt = Path(checkpoint)
     if not ckpt.is_file():
         raise FileNotFoundError(f"Checkpoint not found: {ckpt}")
-    cfg = Config()
-    cfg.not_.t_filters = t_filters
-    model = NOTModel.load_from_checkpoint(
-        str(ckpt), cfg=cfg, map_location="cpu", strict=False
-    )
-    model.eval()
-    path = export_module(model.T, out, image_size=image_size, opset=opset)
+    transport = _load_transport(str(ckpt), t_filters, t_norm)
+    path = export_module(transport, out, image_size=image_size)
     print(f"Exported ONNX to {path}")
     return path
 

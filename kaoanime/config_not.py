@@ -12,6 +12,9 @@ class NOTConfig:
     t_filters: int = (
         48  # UNet num_filters (matches trained checkpoints; reference base_factor=48)
     )
+    t_norm: str = (
+        "batch"  # UNet normalization: "batch" (training default) or "instance"
+    )
     f_filters: int = 64  # NOTPotential num_filters
     max_steps: int = 150001
     precision: str = "bf16-mixed"

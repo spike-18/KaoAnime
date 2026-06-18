@@ -156,6 +156,11 @@ uv run python scripts/export_onnx.py \
     --checkpoint checkpoints/not_ep10.ckpt --out models/export/model.onnx
 ```
 
+`export_onnx` verifies the checkpoint loads fully and fails otherwise. The UNet
+normalization must match how the checkpoint was trained: pass `--t-norm instance`
+for the provided checkpoints (trained with InstanceNorm); the default `batch`
+matches models trained with the current code.
+
 Optionally build a **TensorRT** FP16 engine on a machine with TensorRT installed:
 
 ```bash

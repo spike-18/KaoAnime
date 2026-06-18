@@ -42,7 +42,7 @@ class NOTModel(pl.LightningModule):
             }
         )
         self.cfg = cfg
-        self.T = UNetGenerator(num_filters=cfg.not_.t_filters)
+        self.T = UNetGenerator(num_filters=cfg.not_.t_filters, norm=cfg.not_.t_norm)
         self.f = NOTPotential(num_filters=cfg.not_.f_filters)
         self.fid = FrechetInceptionDistance(feature=2048, normalize=True)
         self._fid_images_seen = 0

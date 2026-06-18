@@ -1,3 +1,4 @@
+import pytest
 import torch
 import torch.nn as nn
 
@@ -8,8 +9,23 @@ def test_unet_uses_batchnorm():
     model = UNetGenerator(num_filters=8)
     has_bn = any(isinstance(m, nn.BatchNorm2d) for m in model.modules())
     has_in = any(isinstance(m, nn.InstanceNorm2d) for m in model.modules())
-    assert has_bn, "UNetGenerator must use BatchNorm2d (Korotin reference)"
-    assert not has_in, "UNetGenerator must not use InstanceNorm2d"
+    assert has_bn, "UNetGenerator default must use BatchNorm2d (Korotin reference)"
+    assert not has_in, "UNetGenerator default must not use InstanceNorm2d"
+
+
+def test_unet_norm_instance_has_no_batchnorm_params():
+    model = UNetGenerator(num_filters=8, norm="instance")
+    assert any(isinstance(m, nn.InstanceNorm2d) for m in model.modules())
+    assert not any(isinstance(m, nn.BatchNorm2d) for m in model.modules())
+    # default InstanceNorm2d (affine=False) carries no parameters
+    for module in model.modules():
+        if isinstance(module, nn.InstanceNorm2d):
+            assert list(module.parameters()) == []
+
+
+def test_unet_unknown_norm_raises():
+    with pytest.raises(ValueError):
+        UNetGenerator(num_filters=8, norm="layer")
 
 
 def test_unet_output_shape_and_range():
