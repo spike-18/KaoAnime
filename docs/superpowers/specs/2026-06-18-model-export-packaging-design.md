@@ -42,7 +42,8 @@ packaging" requirement:
    `tensorrt` is **not** a project dependency.
 3. **Torch-free production path** in a new `kaoanime/serving/` package:
    numpy/cv2/PIL preprocessing (reusing `AlignFaceProcessor` for optional
-   alignment) + an onnxruntime runner. No torch/lightning imports.
+   alignment). No torch/lightning imports. The onnxruntime session is created
+   inline in `infer_onnx.py` (a 3-line call — no wrapper module).
 4. **Production inference entry point** `infer_onnx.py` at repo root (public API),
    using `kaoanime.serving` + onnxruntime only.
 5. Existing `infer.py` (torch/Lightning, checkpoint-based) stays unchanged for
@@ -87,18 +88,16 @@ Documented in README; requires TensorRT installed on the target machine.
     `transforms.get_transforms("test")` numerically.
   - `postprocess(array) -> np.ndarray` → `(H, W, 3)` uint8 from `(1|.,3,H,W)` in
     `[-1, 1]`.
-- `onnx_runner.py`
-  - `OnnxModel(onnx_path)` wrapping `onnxruntime.InferenceSession`; `run(array)`
-    returns the output array.
 
 No module here imports torch. `kaoanime/__init__.py` must stay import-light (verify
 it does not pull torch) so `import kaoanime.serving…` is torch-free.
 
 ### `infer_onnx.py` (repo root, public API)
 
-fire CLI `main(onnx, input, output_dir, image_size=128, align=False)`:
-iterate input file/dir → `preprocess_image` → `OnnxModel.run` → `postprocess` →
-save. Depends only on `kaoanime.serving`, onnxruntime, numpy, cv2/PIL, mediapipe.
+fire CLI `main(onnx, input, output_dir, image_size=128, align=False)`: create one
+`onnxruntime.InferenceSession(onnx)`, then iterate input file/dir →
+`preprocess_image` → `session.run` → `postprocess` → save. Depends only on
+`kaoanime.serving`, onnxruntime, numpy, cv2/PIL, mediapipe.
 
 ### Delivery bundle (README "Production preparation")
 
@@ -129,7 +128,6 @@ TensorRT `.engine` built on the target via `export_tensorrt.sh`.
   on a sample image is **approximate** (PIL/numpy resize ≠ torchvision resize
   bit-for-bit): assert mean abs diff < ~2e-2, not exact equality.
 - `serving.postprocess`: round-trips `[-1,1]` → uint8 correctly (shape/range).
-- `OnnxModel`: runs a trivially exported identity-ish ONNX and returns expected shape.
 - All external-free (no network); torch used only to build the parity reference.
 
 ## Out of Scope
