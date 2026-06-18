@@ -11,7 +11,7 @@ from kaoanime.config_not import NOTConfig
 class DataConfig:
     variant: str = "demo"  # "demo" (DVC-tracked sample) or "full" (downloaded)
     # Public Google Drive file id of demo.zip, fetched via gdown for the demo variant.
-    demo_gdrive_id: str = ""
+    demo_gdrive_id: str = "13VsEPFfbg1sIRloZDcNjJRyo2gh29VD2"
     root_a: str = "data/${data.variant}/trainA"
     root_b: str = "data/${data.variant}/trainB"
     test_a: str = "data/${data.variant}/testA"
