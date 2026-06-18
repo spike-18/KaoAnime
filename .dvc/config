@@ -1,0 +1,6 @@
+[core]
+    remote = data
+['remote "data"']
+    url = gdrive://158t5Cy5bHckNjxzbXI5D5G1EI7Nh27fy
+['remote "models"']
+    url = gdrive://16RC8Zc2cnDvc2Dh46CFoy9iEzPZohFGF
