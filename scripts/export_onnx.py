@@ -81,8 +81,8 @@ def _load_transport(checkpoint: str, t_filters: int, t_norm: str) -> torch.nn.Mo
 
 def export(
     checkpoint: str,
-    out: str = "models/export/model.onnx",
-    t_filters: int = 48,
+    out: str = "models/export/last.onnx",
+    t_filters: int = 64,
     t_norm: str = "batch",
     image_size: int = 128,
 ) -> str:

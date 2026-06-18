@@ -35,6 +35,10 @@ class EvalConfig:
     input: str = ""
     direction: str = "a2b"
     align: bool = False
+    # Model bundle (ONNX + external weights + checkpoint) under DVC, downloadable
+    # from a public Google Drive folder for fresh clones (see kaoanime.model_store).
+    model_dir: str = "models/export"
+    model_gdrive_id: str = "16RC8Zc2cnDvc2Dh46CFoy9iEzPZohFGF"
 
 
 @dataclass

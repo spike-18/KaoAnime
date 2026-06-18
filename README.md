@@ -103,26 +103,27 @@ in the config, default `http://127.0.0.1:8080`; local server:
 
 ### Infer
 
-Entry point — `infer.py`: takes a checkpoint and an image (or a directory) and
-writes the translations to an output folder.
+Entry point — `infer.py`: translates an image (or a directory) and writes the
+results to an output folder. The model bundle is fetched automatically by
+`ensure_model()` (see Production preparation), so no checkpoint path is required:
 
 ```bash
 uv run python infer.py \
-    eval.checkpoint=<path/to/last.ckpt> \
     eval.input=data/demo/testA \
     eval.output_dir=outputs/eval
 ```
 
-The checkpoint is loaded strictly, so its UNet normalization must match the config:
-add `not_.t_norm=instance` for the provided checkpoints (trained with InstanceNorm).
+The checkpoint is loaded strictly, so the config architecture must match the
+published model (`t_filters=64`, `t_norm=batch` — both defaults). To run a
+different checkpoint, set `eval.checkpoint=<path>` and the matching `not_.t_*`.
 Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true` enables face alignment
 before translation.
 
-Lightweight, **torch-free** inference on an exported ONNX model (see Production
+Lightweight, **torch-free** inference on the exported ONNX model (see Production
 preparation below):
 
 ```bash
-uv run python scripts/infer_onnx.py --onnx models/export/model.onnx \
+uv run python scripts/infer_onnx.py --onnx models/export/last.onnx \
     --input data/demo/testA --output-dir outputs/onnx
 ```
 
@@ -155,25 +156,35 @@ For production, the transport map `T` is exported to **ONNX**:
 
 ```bash
 uv run python scripts/export_onnx.py \
-    --checkpoint checkpoints/not_ep10.ckpt --out models/export/model.onnx
+    --checkpoint models/export/last.ckpt --out models/export/last.onnx
 ```
 
-`export_onnx` verifies the checkpoint loads fully and fails otherwise. The UNet
-normalization must match how the checkpoint was trained: pass `--t-norm instance`
-for the provided checkpoints (trained with InstanceNorm); the default `batch`
-matches models trained with the current code.
+`export_onnx` verifies the checkpoint loads fully and fails otherwise; the config
+architecture must match (`--t_filters 64 --t_norm batch`, the defaults). The ONNX
+graph stores weights externally in `last.onnx.data`, referenced by relative name —
+keep the two files together.
 
-Pre-exported models (`.pt` / `.onnx`) are published to the DVC `models` remote
-(Google Drive) — see `.dvc/config`.
+#### Model storage & download
+
+Data and models live in **two separate DVC remotes** (`.dvc/config`), both local
+directories. Because a local remote is not portable to a fresh clone, the bundle is
+also published to a public **Google Drive folder** and fetched on demand:
+
+- `kaoanime.model_store.ensure_model()` (called by `infer.py`) downloads the bundle
+  via `gdown` if `models/export/` is missing, normalising the Drive names
+  (`NOT.*`) to the canonical `last.onnx` / `last.onnx.data` / `last.ckpt`. The
+  folder id is `eval.model_gdrive_id`.
+- The bundle is DVC-tracked (`models/export.dvc`) and pushed to the `models`
+  remote: `dvc add models/export && dvc push -r models`.
 
 Optionally build a **TensorRT** FP16 engine on a machine with TensorRT installed:
 
 ```bash
-bash scripts/export_tensorrt.sh models/export/model.onnx models/export/model.engine
+bash scripts/export_tensorrt.sh models/export/last.onnx models/export/last.engine
 ```
 
-**Delivery bundle:** `model.onnx` + `scripts/infer_onnx.py`. Alignment is optional
-and additionally needs `models/face_landmarker.task` + `kaoanime/utils/align.py`.
-Default runtime deps are `onnxruntime, numpy, pillow` (alignment adds
-`opencv-python, mediapipe`) — no torch/lightning. An inference server (Triton /
-MLflow Serving) is planned.
+**Delivery bundle:** `last.onnx` (+ `last.onnx.data`) + `scripts/infer_onnx.py`.
+Alignment is optional and additionally needs `models/face_landmarker.task` +
+`kaoanime/utils/align.py`. Default runtime deps are `onnxruntime, numpy, pillow`
+(alignment adds `opencv-python, mediapipe`) — no torch/lightning. A Triton
+inference server is planned next.

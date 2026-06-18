@@ -25,7 +25,10 @@ wheels/
 /outputs/
 /mlruns/
 /mlartifacts/
-/models/
+# Models: ignore contents, but keep DVC pointers tracked (mirror /data)
+/models/*
+!/models/*.dvc
+!/models/.gitignore
 # Stray local MLflow file-store experiment dir
 /2/
 

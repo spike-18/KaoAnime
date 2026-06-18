@@ -9,9 +9,7 @@ class NOTConfig:
     )
     t_lr: float = 1e-4  # transport map (UNet) learning rate
     f_lr: float = 1e-4  # potential (NOTPotential) learning rate
-    t_filters: int = (
-        64  # UNet num_filters (matches trained checkpoints; reference base_factor=48)
-    )
+    t_filters: int = 64  # UNet num_filters; matches the published 64-wide model
     t_norm: str = (
         "batch"  # UNet normalization: "batch" (training default) or "instance"
     )
