@@ -188,9 +188,10 @@ bash scripts/export_tensorrt.sh models/export/last.onnx models/export/last.engin
 ```
 
 **Delivery bundle:** `last.onnx` (+ `last.onnx.data`) + `scripts/infer_onnx.py`.
-Alignment is optional and additionally needs `models/face_landmarker.task` +
-`kaoanime/utils/align.py`. Default runtime deps are `onnxruntime, numpy, pillow`
-(alignment adds `opencv-python, mediapipe`) — no torch/lightning.
+Alignment is optional and additionally needs `kaoanime/utils/align.py`; its
+MediaPipe face-landmarker model is downloaded automatically on first use and
+cached under `~/.cache/kaoanime/`. Default runtime deps are `onnxruntime, numpy,
+pillow` (alignment adds `opencv-python, mediapipe`) — no torch/lightning.
 
 ### Inference server (Triton)
 
