@@ -161,7 +161,7 @@ enables face alignment before translation.
 Lightweight, **torch-free** inference on an exported ONNX model:
 
 ```bash
-uv run python scripts/infer_onnx.py --onnx models/export/NOT-cuda.onnx \
+uv run python scripts/infer_onnx.py --onnx models/export/NOT.onnx \
     --input data/demo/testA --output-dir outputs/onnx
 ```
 
@@ -194,7 +194,7 @@ For production, the transport map `T` is exported to **ONNX**:
 
 ```bash
 uv run python scripts/export_onnx.py \
-    --checkpoint models/export/NOT.ckpt --out models/export/NOT-cuda.onnx
+    --checkpoint models/export/NOT.ckpt --out models/export/NOT.onnx
 ```
 
 `export_onnx` verifies the checkpoint loads fully and fails otherwise; the config
@@ -224,10 +224,10 @@ published to a public **Google Drive folder**:
 Optionally build a **TensorRT** engine on a machine with TensorRT installed:
 
 ```bash
-bash scripts/export_tensorrt.sh models/export/NOT-cuda.onnx models/export/NOT-cuda.engine
+bash scripts/export_tensorrt.sh models/export/NOT.onnx models/export/NOT.engine
 ```
 
-**Delivery bundle:** `NOT-cuda.onnx` (+ `NOT-cuda.onnx.data`) + `scripts/infer_onnx.py`.
+**Delivery bundle:** `NOT.onnx` (+ `NOT.onnx.data`) + `scripts/infer_onnx.py`.
 Alignment is optional and additionally needs `kaoanime/utils/align.py`; its
 MediaPipe face-landmarker model is downloaded automatically on first use and
 cached under `~/.cache/kaoanime/`. Default runtime deps are `onnxruntime, numpy,
@@ -254,7 +254,7 @@ the model to serve with `MODEL_ONNX` (a file under `models/export/`):
 
 ```bash
 uv run python scripts/download_model.py            # once
-MODEL_ONNX=NOT-cuda.onnx bash triton/run_server.sh # stage + build + serve
+MODEL_ONNX=NOT.onnx bash triton/run_server.sh      # stage + build + serve
 # HTTP :8000 · gRPC :8001 · metrics :8002 (defaults)
 ```
 
@@ -263,7 +263,7 @@ The ports default to `8000 / 8001 / 8002` and can be overridden at launch via th
 client at the matching HTTP port with `--url`:
 
 ```bash
-MODEL_ONNX=NOT-cuda.onnx HTTP_PORT=9000 bash triton/run_server.sh
+MODEL_ONNX=NOT.onnx HTTP_PORT=9000 bash triton/run_server.sh
 uv run python triton/client.py examples --url localhost:9000
 ```
 

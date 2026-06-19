@@ -8,7 +8,7 @@ which model to serve — download the weights first
 (``scripts/download_model.py``) or export your own (``scripts/export_onnx.py``).
 
 Example:
-    uv run python triton/setup_model_repository.py --onnx NOT-cuda.onnx
+    uv run python triton/setup_model_repository.py --onnx NOT.onnx
 """
 
 from __future__ import annotations
