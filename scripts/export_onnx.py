@@ -2,7 +2,7 @@
 """Export the NOT transport map (T) to ONNX, verifying parity with PyTorch.
 
 Example:
-    uv run python scripts/export_onnx.py --checkpoint checkpoints/not_ep10.ckpt \\
+    uv run python scripts/export_onnx.py --checkpoint checkpoints/model.ckpt \\
         --out models/export/model.onnx
 """
 

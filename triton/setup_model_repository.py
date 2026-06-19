@@ -9,8 +9,8 @@ to the model file. The source ONNX is resolved under the model bundle directory
 ``ensure_model``.
 
 Example:
-    uv run python triton/setup_model_repository.py                  # model.onnx
-    uv run python triton/setup_model_repository.py --onnx other.onnx
+    uv run python triton/setup_model_repository.py                   # NOT-cuda.onnx
+    uv run python triton/setup_model_repository.py --onnx model.onnx
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from kaoanime.model_store import ensure_model
 _REPO = Path(__file__).resolve().parent / "model_repository"
 
 
-def setup(onnx: str = "model.onnx") -> None:
+def setup(onnx: str = "NOT-cuda.onnx") -> None:
     cfg = Config()
     src_dir = Path(cfg.eval.model_dir)
     onnx_path = src_dir / onnx
@@ -51,7 +51,7 @@ def setup(onnx: str = "model.onnx") -> None:
 
     dst = _REPO / "transport" / "1"
     dst.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(onnx_path, dst / "model.onnx")
+    shutil.copyfile(onnx_path, dst / onnx)
     shutil.copyfile(src_data, dst / data_name)
     # Drop any stale weights file left over from a previously staged model.
     for old in dst.glob("*.onnx.data"):
