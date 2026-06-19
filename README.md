@@ -1,9 +1,26 @@
+<div align="center">
+
 # KaoAnime — selfie-to-anime style transfer
+
+_Unpaired selfie → anime style transfer with Neural Optimal Transport._
+
+![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C?logo=pytorch&logoColor=white)
+![Lightning](https://img.shields.io/badge/Lightning-2.x-792EE5?logo=lightning&logoColor=white)
+![uv](https://img.shields.io/badge/deps-uv-DE5FE9?logo=uv&logoColor=white)
+![Ruff](https://img.shields.io/badge/lint-ruff-D7FF64?logo=ruff&logoColor=black)
+
+<!-- Add a before→after banner here: docs/assets/hero.png (a selfie → anime strip). -->
+<img src="docs/assets/hero.png" alt="KaoAnime — selfie to anime demo" width="720">
+
+</div>
 
 KaoAnime turns a real face photo into an anime-style portrait via neural
 image-to-image translation between two unpaired domains. The main model is
-**Neural Optimal Transport (NOT)** (Korotin et al., ICLR 2023); a **CycleGAN**
-alternative that shares the same building blocks is also available.
+**Neural Optimal Transport (NOT)**
+([Korotin et al., ICLR 2023](https://arxiv.org/abs/2201.12220)); a **CycleGAN**
+([Zhu et al., ICCV 2017](https://arxiv.org/abs/1703.10593)) alternative that shares
+the same building blocks is also available.
 
 ## Project overview
 
@@ -51,6 +68,22 @@ models and training loop; [Hydra](https://hydra.cc/) — configuration;
 [DVC](https://dvc.org/) — data and model versioning;
 [torchmetrics](https://lightning.ai/docs/torchmetrics/) — FID;
 [MediaPipe](https://developers.google.com/mediapipe) — face alignment.
+
+## Examples
+
+The input selfies live in `examples/`; the anime results are produced by the model
+(see [Infer](#infer)). Drop your outputs into `docs/assets/` as `anime_1.jpg …
+anime_3.jpg` to fill the right column — e.g.:
+
+```bash
+uv run python triton/client.py examples --output_dir docs/assets
+```
+
+|                        Selfie (input)                        |                        Anime (output)                         |
+| :----------------------------------------------------------: | :-----------------------------------------------------------: |
+| <img src="examples/selfie_1.jpg" width="160" alt="selfie 1"> | <img src="docs/assets/anime_1.jpg" width="160" alt="anime 1"> |
+| <img src="examples/selfie_2.jpg" width="160" alt="selfie 2"> | <img src="docs/assets/anime_2.jpg" width="160" alt="anime 2"> |
+| <img src="examples/selfie_3.jpg" width="160" alt="selfie 3"> | <img src="docs/assets/anime_3.jpg" width="160" alt="anime 3"> |
 
 ## Technical details
 
@@ -246,3 +279,11 @@ image bytes to the `kaoanime` ensemble and saves the returned RGB images with an
 clash with the inputs (`--suffix` to change). Override the Triton base image tag
 with `TRITON_TAG=<tag>` — use a full `-py3` tag (the `-py3-min` image has no
 backends and cannot serve the models).
+
+## References
+
+- Korotin, Selikhanovych, Burnaev. **Neural Optimal Transport.** ICLR 2023.
+  [arXiv:2201.12220](https://arxiv.org/abs/2201.12220)
+- Zhu, Park, Isola, Efros. **Unpaired Image-to-Image Translation using
+  Cycle-Consistent Adversarial Networks (CycleGAN).** ICCV 2017.
+  [arXiv:1703.10593](https://arxiv.org/abs/1703.10593)
