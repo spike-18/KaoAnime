@@ -4,12 +4,12 @@ from pathlib import Path
 
 # Canonical artifact names expected by inference and serving. The exported ONNX
 # graph embeds a *relative* reference to its external-weights file by name
-# ("last.onnx.data", the name it was exported under), so the published Google
+# ("model.onnx.data", the name it was exported under), so the published Google
 # Drive bundle must already use these canonical names — otherwise onnxruntime/
 # Triton cannot resolve the weights file.
-ONNX_NAME = "last.onnx"
-ONNX_DATA_NAME = "last.onnx.data"
-CKPT_NAME = "last.ckpt"
+ONNX_NAME = "model.onnx"
+ONNX_DATA_NAME = "model.onnx.data"
+CKPT_NAME = "model.ckpt"
 
 
 def download_model(gdrive_id: str, dest: str = "models/export") -> None:
@@ -17,8 +17,9 @@ def download_model(gdrive_id: str, dest: str = "models/export") -> None:
 
     The folder holds the transport map exported to ONNX (graph + external weights)
     plus the Lightning checkpoint, already named with the canonical scheme
-    (last.onnx / last.onnx.data / last.ckpt) so the ONNX external weights resolve
-    and downstream code finds predictable paths. Files are fetched into *dest*.
+    (model.onnx / model.onnx.data / model.ckpt) so the ONNX external weights
+    resolve and downstream code finds predictable paths. Files are fetched into
+    *dest*.
     """
     import gdown
 

@@ -156,7 +156,7 @@ Lightweight, **torch-free** inference on the exported ONNX model (see Production
 preparation below):
 
 ```bash
-uv run python scripts/infer_onnx.py --onnx models/export/last.onnx \
+uv run python scripts/infer_onnx.py --onnx models/export/model.onnx \
     --input data/demo/testA --output-dir outputs/onnx
 ```
 
@@ -218,10 +218,10 @@ published to a public **Google Drive folder** and fetched on demand:
 Optionally build a **TensorRT** engine on a machine with TensorRT installed:
 
 ```bash
-bash scripts/export_tensorrt.sh models/export/last.onnx models/export/model.engine
+bash scripts/export_tensorrt.sh models/export/model.onnx models/export/model.engine
 ```
 
-**Delivery bundle:** `last.onnx` (+ `model.onnx.data`) + `scripts/infer_onnx.py`.
+**Delivery bundle:** `model.onnx` (+ `model.onnx.data`) + `scripts/infer_onnx.py`.
 Alignment is optional and additionally needs `kaoanime/utils/align.py`; its
 MediaPipe face-landmarker model is downloaded automatically on first use and
 cached under `~/.cache/kaoanime/`. Default runtime deps are `onnxruntime, numpy,
