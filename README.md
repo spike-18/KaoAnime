@@ -60,12 +60,15 @@ The project uses the [uv](https://docs.astral.sh/uv/) package manager; PyTorch i
 installed from the CUDA 12.8 index (see `pyproject.toml`).
 
 ```bash
-uv sync                    # environment + all dependencies (including PyTorch)
-uv sync --group dev        # dev tools (pytest, jupyter, pre-commit)
-uv run pre-commit install  # git hooks
+uv sync                    # core env + PyTorch (CUDA 12.8); includes the dev group
+uv sync --group serve      # + torch-free Triton test client (for triton/client.py)
+uv run pre-commit install  # git hooks (pre-commit ships in the dev group)
 ```
 
-Always invoke Python via `uv run python ...`.
+Dependency groups (`pyproject.toml`): the **`dev`** group (pytest, jupyter,
+pre-commit, ipywidgets) is installed by default; the **`serve`** group
+(`tritonclient`) is optional and only needed to query the Triton server. Always
+invoke Python via `uv run python ...`.
 
 ### Data
 
