@@ -106,7 +106,7 @@ The dataset is fetched automatically: `train.py`/`infer.py` call `ensure_data()`
 which downloads the required split if it is missing.
 
 - **demo** (default, `data.variant=demo`) — a public `demo.zip` is downloaded from
-  Google Drive via `gdown` with no authentication and unpacked into `data/demo/`.
+  Google Drive via `gdown` and unpacked into `data/demo/`.
 - **full** (`data.variant=full`) — CelebA (`gdown`) + AlignedAnimeFaces (Kaggle API,
   requires `~/.kaggle/kaggle.json`), then laid out by `scripts/prepare_dataset.py`.
   To avoid re-downloading 100 GB, point at existing paths:
@@ -132,7 +132,7 @@ uv run python train.py not_.t_iters=5 not_.t_lr=5e-5 data.batch_size=32
 
 Metrics, hyperparameters, and training curves are logged to MLflow (address is set
 in the config, default `http://127.0.0.1:8080`; local server:
-`uv run mlflow server --host 127.0.0.1 --port 8080`).
+`uvx mlflow ui --port 8080`).
 
 ### Infer
 
@@ -189,13 +189,11 @@ For production, the transport map `T` is exported to **ONNX**:
 
 ```bash
 uv run python scripts/export_onnx.py \
-    --checkpoint models/export/last.ckpt --out models/export/last.onnx
+    --checkpoint models/export/model.ckpt --out models/export/model.onnx
 ```
 
 `export_onnx` verifies the checkpoint loads fully and fails otherwise; the config
-architecture must match (`--t_filters 64 --t_norm batch`, the defaults). The ONNX
-graph stores weights externally in `last.onnx.data`, referenced by relative name —
-keep the two files together.
+architecture must match (`--t_filters 64 --t_norm batch`, the defaults). **Do not change onnx file names after export.**
 
 #### Model storage & download
 
@@ -213,20 +211,17 @@ Because a local remote is not portable to a fresh clone, the model bundle is als
 published to a public **Google Drive folder** and fetched on demand:
 
 - `kaoanime.model_store.ensure_model()` (called by `infer.py`) downloads the bundle
-  via `gdown` if `models/export/` is missing. The Drive folder must already use the
-  canonical names `last.onnx` / `last.onnx.data` / `last.ckpt` — the ONNX graph
-  references its external weights file by name. The folder id is
-  `eval.model_gdrive_id`.
+  via `gdown` if `models/export/` is missing. The folder id is `eval.model_gdrive_id`.
 - The bundle is DVC-tracked (`models/export.dvc`) and pushed to the `models`
   remote: `dvc add models/export && dvc push -r models`.
 
 Optionally build a **TensorRT** engine on a machine with TensorRT installed:
 
 ```bash
-bash scripts/export_tensorrt.sh models/export/last.onnx models/export/last.engine
+bash scripts/export_tensorrt.sh models/export/last.onnx models/export/model.engine
 ```
 
-**Delivery bundle:** `last.onnx` (+ `last.onnx.data`) + `scripts/infer_onnx.py`.
+**Delivery bundle:** `last.onnx` (+ `model.onnx.data`) + `scripts/infer_onnx.py`.
 Alignment is optional and additionally needs `kaoanime/utils/align.py`; its
 MediaPipe face-landmarker model is downloaded automatically on first use and
 cached under `~/.cache/kaoanime/`. Default runtime deps are `onnxruntime, numpy,
@@ -256,8 +251,7 @@ bash triton/run_server.sh        # populate repo + docker build + serve
 ```
 
 The ports default to `8000 / 8001 / 8002` and can be overridden at launch via the
-`HTTP_PORT` / `GRPC_PORT` / `METRICS_PORT` environment variables (each is mapped
-both inside the container and on the host, and passed to `tritonserver`). Point the
+`HTTP_PORT` / `GRPC_PORT` / `METRICS_PORT` environment variables. Point the
 client at the matching HTTP port with `--url`:
 
 ```bash
@@ -281,10 +275,7 @@ uv run python triton/client.py data/demo/testA --output_dir outputs/triton
 
 A few sample selfies live in `examples/` for a quick demo. The client sends raw
 image bytes to the `kaoanime` ensemble and saves the returned RGB images with an
-`_anime` suffix (e.g. `selfie_1.jpg` -> `selfie_1_anime.jpg`) so results never
-clash with the inputs (`--suffix` to change). Override the Triton base image tag
-with `TRITON_TAG=<tag>` — use a full `-py3` tag (the `-py3-min` image has no
-backends and cannot serve the models).
+`_anime` suffix (e.g. `selfie_1.jpg` -> `selfie_1_anime.jpg`).
 
 ## References
 
