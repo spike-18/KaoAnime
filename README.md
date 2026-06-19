@@ -199,9 +199,18 @@ keep the two files together.
 
 #### Model storage & download
 
-Data and models live in **two separate DVC remotes** (`.dvc/config`), both local
-directories. Because a local remote is not portable to a fresh clone, the bundle is
-also published to a public **Google Drive folder** and fetched on demand:
+Data and models live in **two separate DVC remotes** (`.dvc/config`): `data` (the
+default) and `models`. Both are **local directories**, and the committed paths point
+at a specific machine — set them to your own locations before any `dvc push`/`pull`
+(use `--local` to keep machine-specific paths out of git):
+
+```bash
+dvc remote modify --local data   url /path/to/your/dvc-storage/data
+dvc remote modify --local models url /path/to/your/dvc-storage/models
+```
+
+Because a local remote is not portable to a fresh clone, the model bundle is also
+published to a public **Google Drive folder** and fetched on demand:
 
 - `kaoanime.model_store.ensure_model()` (called by `infer.py`) downloads the bundle
   via `gdown` if `models/export/` is missing. The Drive folder must already use the
