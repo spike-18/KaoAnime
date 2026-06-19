@@ -147,7 +147,7 @@ kaoanime-selfie2anime/
 ├── scripts/                 # data prep, model export (onnx/tensorrt), onnx inference
 ├── notebooks/               # exploratory notebooks
 ├── tests/                   # pytest tests
-├── train.py · infer.py · eval.py   # CLI entry points
+├── train.py · infer.py            # CLI entry points
 ├── pyproject.toml · uv.lock        # dependencies
 └── .pre-commit-config.yaml         # code-quality hooks
 ```
