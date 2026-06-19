@@ -1,17 +1,10 @@
 # README assets
 
-Image files referenced by the top-level `README.md`. They are intentionally not
-committed yet — add them here to fill the placeholders:
+Images referenced by the top-level `README.md`:
 
-- `hero.png` — a before→after banner shown under the title (a selfie → anime strip,
-  ~720 px wide).
-- `anime_1.jpg`, `anime_2.jpg`, `anime_3.jpg` — anime outputs for the
-  `examples/selfie_{1,2,3}.jpg` inputs, shown in the **Examples** table.
+- `example_1.jpg` — before→after banner shown under the title (hero).
+- `example_2.jpg` … `example_5.jpg` — before→after pairs in the **Examples** gallery.
 
-Generate the anime outputs from the bundled selfies, e.g. via the Triton client:
-
-```bash
-uv run python triton/client.py examples --output_dir docs/assets
-```
-
-then rename/crop as needed to match the names above.
+Each is a side-by-side composite — real selfie (left) → anime output (right) —
+generated from held-out `data/demo/testA` faces with the NOT transport map
+(`scripts/infer_onnx.py`).
