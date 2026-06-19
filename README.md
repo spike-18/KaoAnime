@@ -171,13 +171,14 @@ directories. Because a local remote is not portable to a fresh clone, the bundle
 also published to a public **Google Drive folder** and fetched on demand:
 
 - `kaoanime.model_store.ensure_model()` (called by `infer.py`) downloads the bundle
-  via `gdown` if `models/export/` is missing, normalising the Drive names
-  (`NOT.*`) to the canonical `last.onnx` / `last.onnx.data` / `last.ckpt`. The
-  folder id is `eval.model_gdrive_id`.
+  via `gdown` if `models/export/` is missing. The Drive folder must already use the
+  canonical names `last.onnx` / `last.onnx.data` / `last.ckpt` — the ONNX graph
+  references its external weights file by name. The folder id is
+  `eval.model_gdrive_id`.
 - The bundle is DVC-tracked (`models/export.dvc`) and pushed to the `models`
   remote: `dvc add models/export && dvc push -r models`.
 
-Optionally build a **TensorRT** FP16 engine on a machine with TensorRT installed:
+Optionally build a **TensorRT** engine on a machine with TensorRT installed:
 
 ```bash
 bash scripts/export_tensorrt.sh models/export/last.onnx models/export/last.engine
@@ -208,7 +209,17 @@ Build and serve (onnxruntime CPU, no GPU needed):
 
 ```bash
 bash triton/run_server.sh        # populate repo + docker build + serve
-# HTTP :8000 · gRPC :8001 · metrics :8002
+# HTTP :8000 · gRPC :8001 · metrics :8002 (defaults)
+```
+
+The ports default to `8000 / 8001 / 8002` and can be overridden at launch via the
+`HTTP_PORT` / `GRPC_PORT` / `METRICS_PORT` environment variables (each is mapped
+both inside the container and on the host, and passed to `tritonserver`). Point the
+client at the matching HTTP port with `--url`:
+
+```bash
+HTTP_PORT=9000 bash triton/run_server.sh
+uv run python triton/client.py examples --url localhost:9000
 ```
 
 Query it with the test client (deps: `uv sync --group serve`, torch-free). It takes

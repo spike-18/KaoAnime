@@ -31,7 +31,7 @@ def run_inference(
         direction: "a2b" uses g_ab/T (selfie→anime); "b2a" uses g_ba (anime→selfie,
                    CycleGAN only — NOT model is unidirectional).
         device: Torch device string, e.g. "cuda" or "cpu".
-        align: Apply ArcFace landmark alignment before the transform pipeline.
+        align: Apply MediaPipe landmark alignment before the transform pipeline.
                Images where no face is detected fall back to standard centre-crop.
 
     Returns:
