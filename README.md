@@ -136,27 +136,32 @@ in the config, default `http://127.0.0.1:8080`; local server:
 
 ### Infer
 
+First download the published weights once (into `models/export/` by default):
+
+```bash
+uv run python scripts/download_model.py
+```
+
 Entry point — `infer.py`: translates an image (or a directory) and writes the
-results to an output folder. The model bundle is fetched automatically by
-`ensure_model()` (see Production preparation), so no checkpoint path is required:
+results to an output folder. Point `eval.checkpoint` at the model you want to use
+(a downloaded bundle file or your own checkpoint):
 
 ```bash
 uv run python infer.py \
+    eval.checkpoint=models/export/NOT.ckpt \
     eval.input=data/demo/testA \
     eval.output_dir=outputs/eval
 ```
 
-The checkpoint is loaded strictly, so the config architecture must match the
-published model (`t_filters=64`, `t_norm=batch` — both defaults). To run a
-different checkpoint, set `eval.checkpoint=<path>` and the matching `not_.t_*`.
-Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true` enables face alignment
-before translation.
+The checkpoint is loaded strictly, so the config architecture must match it
+(`t_filters=64`, `t_norm=batch` — both defaults; set `not_.t_*` for a checkpoint
+trained differently). Input — `.jpg/.png/.webp/.bmp` images; `eval.align=true`
+enables face alignment before translation.
 
-Lightweight, **torch-free** inference on the exported ONNX model (see Production
-preparation below):
+Lightweight, **torch-free** inference on an exported ONNX model:
 
 ```bash
-uv run python scripts/infer_onnx.py --onnx models/export/model.onnx \
+uv run python scripts/infer_onnx.py --onnx models/export/NOT-cuda.onnx \
     --input data/demo/testA --output-dir outputs/onnx
 ```
 
@@ -174,7 +179,7 @@ kaoanime-selfie2anime/
 │   ├── config*.py           # Hydra configs (shared + NOT + CycleGAN)
 │   ├── model_not.py         # NOT LightningModule
 │   └── model_cyclegan.py    # CycleGAN LightningModule
-├── scripts/                 # data prep, model export (onnx/tensorrt), onnx inference
+├── scripts/                 # data prep, model download/export (onnx/tensorrt), onnx inference
 ├── notebooks/               # exploratory notebooks
 ├── tests/                   # pytest tests
 ├── train.py · infer.py            # CLI entry points
@@ -189,7 +194,7 @@ For production, the transport map `T` is exported to **ONNX**:
 
 ```bash
 uv run python scripts/export_onnx.py \
-    --checkpoint models/export/model.ckpt --out models/export/model.onnx
+    --checkpoint models/export/NOT.ckpt --out models/export/NOT-cuda.onnx
 ```
 
 `export_onnx` verifies the checkpoint loads fully and fails otherwise; the config
@@ -208,20 +213,21 @@ dvc remote modify --local models url /path/to/your/dvc-storage/models
 ```
 
 Because a local remote is not portable to a fresh clone, the model bundle is also
-published to a public **Google Drive folder** and fetched on demand:
+published to a public **Google Drive folder**:
 
-- `kaoanime.model_store.ensure_model()` (called by `infer.py`) downloads the bundle
-  via `gdown` if `models/export/` is missing. The folder id is `eval.model_gdrive_id`.
+- Download it with `uv run python scripts/download_model.py` (folder id
+  `eval.model_gdrive_id`, into `eval.model_dir` = `models/export/`). Files are
+  fetched as-is; you then pass the one you want to infer / Triton / export.
 - The bundle is DVC-tracked (`models/export.dvc`) and pushed to the `models`
   remote: `dvc add models/export && dvc push -r models`.
 
 Optionally build a **TensorRT** engine on a machine with TensorRT installed:
 
 ```bash
-bash scripts/export_tensorrt.sh models/export/model.onnx models/export/model.engine
+bash scripts/export_tensorrt.sh models/export/NOT-cuda.onnx models/export/NOT-cuda.engine
 ```
 
-**Delivery bundle:** `model.onnx` (+ `model.onnx.data`) + `scripts/infer_onnx.py`.
+**Delivery bundle:** `NOT-cuda.onnx` (+ `NOT-cuda.onnx.data`) + `scripts/infer_onnx.py`.
 Alignment is optional and additionally needs `kaoanime/utils/align.py`; its
 MediaPipe face-landmarker model is downloaded automatically on first use and
 cached under `~/.cache/kaoanime/`. Default runtime deps are `onnxruntime, numpy,
@@ -240,13 +246,15 @@ kaoanime (ensemble)
 ```
 
 Each step has a `config.pbtxt`; the ensemble wiring is in
-`triton/model_repository/kaoanime/config.pbtxt`. The ONNX is copied into
-`transport/1/` at setup (not committed — pulled via `ensure_model`/DVC).
+`triton/model_repository/kaoanime/config.pbtxt`. At setup the chosen ONNX is staged
+into `transport/1/model.onnx` (not committed — download the weights first).
 
-Build and serve (onnxruntime CPU, no GPU needed):
+Download the weights, then build and serve (onnxruntime CPU, no GPU needed). Pick
+the model to serve with `MODEL_ONNX` (a file under `models/export/`):
 
 ```bash
-bash triton/run_server.sh        # populate repo + docker build + serve
+uv run python scripts/download_model.py            # once
+MODEL_ONNX=NOT-cuda.onnx bash triton/run_server.sh # stage + build + serve
 # HTTP :8000 · gRPC :8001 · metrics :8002 (defaults)
 ```
 
@@ -255,7 +263,7 @@ The ports default to `8000 / 8001 / 8002` and can be overridden at launch via th
 client at the matching HTTP port with `--url`:
 
 ```bash
-HTTP_PORT=9000 bash triton/run_server.sh
+MODEL_ONNX=NOT-cuda.onnx HTTP_PORT=9000 bash triton/run_server.sh
 uv run python triton/client.py examples --url localhost:9000
 ```
 
